@@ -1,3 +1,5 @@
+// Register.tsx
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -11,6 +13,10 @@ import logo from "@/assets/ping-me-logo.png";
 import { Phone, ArrowRight, ArrowLeft, User, Car, Loader2 } from "lucide-react";
 import { ConfirmationResult } from "firebase/auth";
 
+// 🔥 FIRESTORE IMPORTS (IMPORTANT)
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+
 const Register = () => {
   const [step, setStep] = useState<"auth" | "details">("auth");
   const [method, setMethod] = useState<"google" | "phone" | null>(null);
@@ -19,31 +25,32 @@ const Register = () => {
   const [showOtp, setShowOtp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+
   const [formData, setFormData] = useState({
     fullName: "",
     age: "",
     vehicleNumber: "",
     vehicleModel: "",
   });
-  
+
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { signInWithGoogle, sendOTP, verifyOTP, updateUserProfile, user } = useAuth();
+  const { signInWithGoogle, sendOTP, verifyOTP, user } = useAuth();
 
+  // ---------------- GOOGLE SIGNUP ----------------
   const handleGoogleSignup = async () => {
     setLoading(true);
     try {
       await signInWithGoogle();
       toast({
-        title: "Google Verified!",
+        title: "Google Verified",
         description: "Please complete your profile.",
       });
       setStep("details");
     } catch (error: any) {
-      console.error(error);
       toast({
         title: "Signup Failed",
-        description: error.message || "Could not sign up with Google.",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -51,31 +58,28 @@ const Register = () => {
     }
   };
 
+  // ---------------- PHONE OTP ----------------
   const handlePhoneSendOtp = async () => {
     if (phone.length < 10) {
       toast({
         title: "Invalid Phone",
-        description: "Please enter a valid phone number.",
+        description: "Enter a valid phone number",
         variant: "destructive",
       });
       return;
     }
-    
+
     setLoading(true);
     try {
       const formattedPhone = phone.startsWith("+") ? phone : `+91${phone}`;
       const result = await sendOTP(formattedPhone, "recaptcha-container");
       setConfirmationResult(result);
       setShowOtp(true);
-      toast({
-        title: "OTP Sent",
-        description: "A verification code has been sent to your phone.",
-      });
+      toast({ title: "OTP Sent" });
     } catch (error: any) {
-      console.error(error);
       toast({
-        title: "Failed to Send OTP",
-        description: error.message || "Please check your phone number and try again.",
+        title: "OTP Failed",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -84,37 +88,20 @@ const Register = () => {
   };
 
   const handlePhoneVerify = async () => {
-    if (otp.length < 6) {
-      toast({
-        title: "Invalid OTP",
-        description: "Please enter the verification code.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!confirmationResult) {
-      toast({
-        title: "Error",
-        description: "Please request a new OTP.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!confirmationResult) return;
 
     setLoading(true);
     try {
       await verifyOTP(confirmationResult, otp);
       toast({
-        title: "Phone Verified!",
-        description: "Please complete your profile.",
+        title: "Phone Verified",
+        description: "Complete your profile",
       });
       setStep("details");
     } catch (error: any) {
-      console.error(error);
       toast({
-        title: "Verification Failed",
-        description: error.message || "Invalid OTP. Please try again.",
+        title: "Invalid OTP",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -122,11 +109,12 @@ const Register = () => {
     }
   };
 
+  // ---------------- COMPLETE REGISTRATION ----------------
   const handleCompleteRegistration = async () => {
     if (!formData.fullName || !formData.vehicleNumber) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
+        title: "Missing fields",
+        description: "Name and vehicle number are required",
         variant: "destructive",
       });
       return;
@@ -134,8 +122,8 @@ const Register = () => {
 
     if (!user) {
       toast({
-        title: "Error",
-        description: "Please sign in first.",
+        title: "Auth Error",
+        description: "User not authenticated",
         variant: "destructive",
       });
       return;
@@ -143,31 +131,34 @@ const Register = () => {
 
     setLoading(true);
     try {
-      // Update user profile in Firestore
-      await updateUserProfile({
-        fullName: formData.fullName,
-        isOnboarded: true,
-      });
-
-      // Add the vehicle
-      await addVehicle(
-        user.uid,
-        formData.vehicleNumber,
-        formData.vehicleModel || "Unknown",
-        "Car",
-        ""
+      // 🔥 CREATE / UPDATE USER DOCUMENT
+      await setDoc(
+        doc(db, "users", user.uid),
+        {
+          fullName: formData.fullName,
+          age: formData.age ? Number(formData.age) : null,
+          phone: user.phoneNumber || null,
+          email: user.email || null,
+          role: "user",
+          isOnboarded: true,
+          createdAt: serverTimestamp(),
+        },
+        { merge: true },
       );
 
+      // ✅ ADD VEHICLE
+      await addVehicle(user.uid, formData.vehicleNumber, formData.vehicleModel || "Unknown", "Car", "");
+
       toast({
-        title: "Welcome to PingME!",
-        description: "Your account has been created successfully.",
+        title: "Welcome to PingME 🎉",
+        description: "Account created successfully",
       });
+
       navigate("/dashboard");
     } catch (error: any) {
-      console.error(error);
       toast({
         title: "Registration Failed",
-        description: error.message || "Please try again.",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -177,10 +168,8 @@ const Register = () => {
 
   return (
     <div className="min-h-screen bg-ping-cream flex flex-col">
-      {/* Recaptcha Container (invisible) */}
       <div id="recaptcha-container"></div>
 
-      {/* Header */}
       <header className="py-6 px-4">
         <Link to="/">
           <img src={logo} alt="PingME" className="h-12 mx-auto" />
@@ -189,237 +178,56 @@ const Register = () => {
 
       <div className="flex-1 flex items-center justify-center px-4 pb-8">
         <div className="w-full max-w-md">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-3xl p-8 shadow-xl border-2 border-ping-yellow/30"
-            style={{
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 215, 0, 0.1) inset',
-            }}
-          >
+          <motion.div className="bg-white rounded-3xl p-8 shadow-xl">
             {step === "auth" && (
               <>
-                <h1 className="text-2xl font-bold text-center mb-2 text-ping-ink">Create Account</h1>
-                <p className="text-ping-brown text-center mb-8">
-                  Join PingME and protect your vehicle
-                </p>
+                <Button className="w-full mb-4" onClick={handleGoogleSignup} disabled={loading}>
+                  Sign up with Google
+                  {loading && <Loader2 className="ml-2 animate-spin" />}
+                </Button>
 
-                {!method && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="space-y-4"
-                  >
-                    <Button
-                      size="lg"
-                      className="w-full justify-center gap-3 bg-ping-yellow text-ping-ink hover:bg-ping-yellow/90 font-semibold"
-                      onClick={handleGoogleSignup}
-                      disabled={loading}
-                    >
-                      <svg className="w-5 h-5" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                      </svg>
-                      Sign up with Google
-                      {loading && <Loader2 className="w-5 h-5 animate-spin ml-2" />}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="w-full justify-center gap-3 border-2 border-ping-ink/20 hover:border-ping-yellow hover:bg-ping-yellow/10"
-                      onClick={() => setMethod("phone")}
-                    >
-                      <Phone className="w-5 h-5" />
-                      Sign up with Phone
-                    </Button>
-                  </motion.div>
-                )}
-
-                {method === "phone" && !showOtp && (
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="space-y-4"
-                  >
-                    <div>
-                      <Label htmlFor="phone" className="text-ping-ink font-medium">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="+91 98765 43210"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="mt-2 border-2 border-ping-ink/20 focus:border-ping-yellow"
-                      />
-                    </div>
-                    <Button 
-                      size="lg" 
-                      className="w-full bg-ping-yellow text-ping-ink hover:bg-ping-yellow/90 font-semibold"
-                      onClick={handlePhoneSendOtp}
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <>
-                          Send OTP
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="w-full text-ping-brown hover:text-ping-ink"
-                      onClick={() => setMethod(null)}
-                    >
-                      <ArrowLeft className="w-4 h-4 mr-2" />
-                      Back to options
-                    </Button>
-                  </motion.div>
-                )}
-
-                {method === "phone" && showOtp && (
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="space-y-4"
-                  >
-                    <div>
-                      <Label htmlFor="otp" className="text-ping-ink font-medium">Enter OTP</Label>
-                      <Input
-                        id="otp"
-                        type="text"
-                        placeholder="Enter 6-digit code"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                        className="mt-2 text-center text-2xl tracking-widest border-2 border-ping-ink/20 focus:border-ping-yellow"
-                        maxLength={6}
-                      />
-                    </div>
-                    <Button 
-                      size="lg" 
-                      className="w-full bg-ping-yellow text-ping-ink hover:bg-ping-yellow/90 font-semibold"
-                      onClick={handlePhoneVerify}
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <>
-                          Verify & Continue
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="w-full text-ping-brown hover:text-ping-ink"
-                      onClick={() => setShowOtp(false)}
-                    >
-                      <ArrowLeft className="w-4 h-4 mr-2" />
-                      Change phone number
-                    </Button>
-                  </motion.div>
-                )}
-
-                <div className="mt-8 text-center">
-                  <p className="text-sm text-ping-brown">
-                    Already have an account?{" "}
-                    <Link 
-                      to="/login" 
-                      className="font-semibold text-ping-ink relative after:content-[''] after:absolute after:bottom-[-2px] after:left-0 after:right-0 after:h-0.5 after:bg-ping-yellow after:transform after:scale-x-0 after:transition-transform hover:after:scale-x-100"
-                    >
-                      Login
-                    </Link>
-                  </p>
-                </div>
+                <Button variant="outline" className="w-full" onClick={() => setMethod("phone")}>
+                  <Phone className="mr-2" /> Sign up with Phone
+                </Button>
               </>
             )}
 
             {step === "details" && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-              >
-                <h1 className="text-2xl font-bold text-center mb-2 text-ping-ink">Complete Profile</h1>
-                <p className="text-ping-brown text-center mb-8">
-                  Tell us about yourself and your vehicle
-                </p>
+              <>
+                <Label>Full Name</Label>
+                <Input
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                />
 
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="fullName" className="flex items-center gap-2 text-ping-ink font-medium">
-                      <User className="w-4 h-4" />
-                      Full Name *
-                    </Label>
-                    <Input
-                      id="fullName"
-                      type="text"
-                      placeholder="John Doe"
-                      value={formData.fullName}
-                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                      className="mt-2 border-2 border-ping-ink/20 focus:border-ping-yellow"
-                    />
-                  </div>
+                <Label className="mt-3">Age</Label>
+                <Input
+                  type="number"
+                  value={formData.age}
+                  onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                />
 
-                  <div>
-                    <Label htmlFor="age" className="text-ping-ink font-medium">Age</Label>
-                    <Input
-                      id="age"
-                      type="number"
-                      placeholder="25"
-                      value={formData.age}
-                      onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                      className="mt-2 border-2 border-ping-ink/20 focus:border-ping-yellow"
-                    />
-                  </div>
+                <Label className="mt-3">Vehicle Number</Label>
+                <Input
+                  value={formData.vehicleNumber}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      vehicleNumber: e.target.value.toUpperCase(),
+                    })
+                  }
+                />
 
-                  <div>
-                    <Label htmlFor="vehicleNumber" className="flex items-center gap-2 text-ping-ink font-medium">
-                      <Car className="w-4 h-4" />
-                      Vehicle Number *
-                    </Label>
-                    <Input
-                      id="vehicleNumber"
-                      type="text"
-                      placeholder="UP53 DJ1234"
-                      value={formData.vehicleNumber}
-                      onChange={(e) => setFormData({ ...formData, vehicleNumber: e.target.value.toUpperCase() })}
-                      className="mt-2 border-2 border-ping-ink/20 focus:border-ping-yellow"
-                    />
-                  </div>
+                <Label className="mt-3">Vehicle Model</Label>
+                <Input
+                  value={formData.vehicleModel}
+                  onChange={(e) => setFormData({ ...formData, vehicleModel: e.target.value })}
+                />
 
-                  <div>
-                    <Label htmlFor="vehicleModel" className="text-ping-ink font-medium">Vehicle Model/Type</Label>
-                    <Input
-                      id="vehicleModel"
-                      type="text"
-                      placeholder="Honda Activa"
-                      value={formData.vehicleModel}
-                      onChange={(e) => setFormData({ ...formData, vehicleModel: e.target.value })}
-                      className="mt-2 border-2 border-ping-ink/20 focus:border-ping-yellow"
-                    />
-                  </div>
-
-                  <Button 
-                    size="lg" 
-                    className="w-full bg-ping-yellow text-ping-ink hover:bg-ping-yellow/90 font-semibold"
-                    onClick={handleCompleteRegistration}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <>
-                        Complete Registration
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </motion.div>
+                <Button className="w-full mt-6" onClick={handleCompleteRegistration} disabled={loading}>
+                  {loading ? <Loader2 className="animate-spin" /> : "Complete Registration"}
+                </Button>
+              </>
             )}
           </motion.div>
         </div>
