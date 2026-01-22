@@ -13,10 +13,9 @@ import {
   Settings,
   AlertCircle,
   Loader2,
-  ExternalLink,
-  Copy,
-  Check
+  MessageCircle
 } from "lucide-react";
+import VehicleQRCode from "@/components/qr/VehicleQRCode";
 import logo from "@/assets/ping-me-logo.png";
 import productCard from "@/assets/product-card.png";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,8 +40,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
   
   const [showAddVehicle, setShowAddVehicle] = useState(false);
-  const [showQrCode, setShowQrCode] = useState<string | null>(null);
-  const [copiedLink, setCopiedLink] = useState(false);
   
   // Add vehicle form state
   const [newPlate, setNewPlate] = useState("");
@@ -100,19 +97,6 @@ const Dashboard = () => {
     }
   };
 
-  const getQrLink = (qrUuid: string) => {
-    return `${window.location.origin}/scan/${qrUuid}`;
-  };
-
-  const copyLink = (qrUuid: string) => {
-    navigator.clipboard.writeText(getQrLink(qrUuid));
-    setCopiedLink(true);
-    toast({
-      title: "Link Copied!",
-      description: "QR link copied to clipboard.",
-    });
-    setTimeout(() => setCopiedLink(false), 2000);
-  };
 
   return (
     <div className="min-h-screen bg-secondary">
@@ -213,33 +197,12 @@ const Dashboard = () => {
                       <DialogHeader>
                         <DialogTitle>QR Code for {vehicle.plateNumber}</DialogTitle>
                       </DialogHeader>
-                      <div className="flex flex-col items-center py-6">
-                        <div className="bg-white p-4 rounded-xl border-4 border-primary mb-4">
-                          {/* QR Code placeholder - would use qrcode.react in production */}
-                          <div className="w-48 h-48 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ3aGl0ZSIvPjxyZWN0IHg9IjEwIiB5PSIxMCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSJibGFjayIvPjxyZWN0IHg9IjE1MCIgeT0iMTAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgZmlsbD0iYmxhY2siLz48cmVjdCB4PSIxMCIgeT0iMTUwIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9ImJsYWNrIi8+PHJlY3QgeD0iNzAiIHk9IjcwIiB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9ImJsYWNrIi8+PC9zdmc+')] bg-contain flex items-center justify-center">
-                            <span className="text-xs text-muted-foreground">QR Preview</span>
-                          </div>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-4 text-center">
-                          Scan this QR code to contact the owner
-                        </p>
-                        <div className="flex gap-2 w-full">
-                          <Button 
-                            variant="outline" 
-                            className="flex-1"
-                            onClick={() => copyLink(vehicle.qrUuid)}
-                          >
-                            {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                            {copiedLink ? 'Copied!' : 'Copy Link'}
-                          </Button>
-                          <Button 
-                            className="flex-1"
-                            onClick={() => window.open(getQrLink(vehicle.qrUuid), '_blank')}
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                            Test Link
-                          </Button>
-                        </div>
+                      <div className="py-4">
+                        <VehicleQRCode
+                          qrUuid={vehicle.qrUuid}
+                          plateNumber={vehicle.plateNumber}
+                          vehicleModel={`${vehicle.color || ''} ${vehicle.model}`}
+                        />
                       </div>
                     </DialogContent>
                   </Dialog>
