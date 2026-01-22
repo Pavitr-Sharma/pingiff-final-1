@@ -1,6 +1,6 @@
 // Register.tsx
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,19 @@ const Register = () => {
 
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { signInWithGoogle, sendOTP, verifyOTP, user } = useAuth();
+  const { signInWithGoogle, sendOTP, verifyOTP, user, userProfile, loading: authLoading } = useAuth();
+
+  // Check if user is already authenticated and redirect appropriately
+  useEffect(() => {
+    if (!authLoading && user) {
+      if (userProfile?.isOnboarded) {
+        navigate("/dashboard", { replace: true });
+      } else if (step === "auth") {
+        // User is authenticated but not onboarded, move to details step
+        setStep("details");
+      }
+    }
+  }, [user, userProfile, authLoading, navigate, step]);
 
   // ---------------- GOOGLE SIGNUP ----------------
   const handleGoogleSignup = async () => {
@@ -46,13 +58,16 @@ const Register = () => {
         title: "Google Verified",
         description: "Please complete your profile.",
       });
-      setStep("details");
+      // Step change will happen via useEffect when user state updates
     } catch (error: any) {
-      toast({
-        title: "Signup Failed",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Don't show error for redirect
+      if (error.code !== 'auth/redirect-cancelled-by-user') {
+        toast({
+          title: "Signup Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
