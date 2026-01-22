@@ -9,8 +9,8 @@ const firebaseConfig = {
   authDomain: "pingmereg.firebaseapp.com",
   projectId: "YOUR_PROJECT_ID",
   storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "1:1098521383686:web:b2c777e80121311a144487",
+  messagingSenderId: "1098521383686",
+  appId: "YOUR_APP_ID",
 };
 
 // Initialize Firebase
