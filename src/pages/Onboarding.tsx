@@ -47,18 +47,26 @@ const Onboarding = () => {
       return;
     }
 
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "Please login again to continue.",
+        variant: "destructive"
+      });
+      navigate("/login");
+      return;
+    }
+
     setLoading(true);
     try {
-      // Update user profile
+      // Add vehicle first (the main action)
+      await addVehicle(user.uid, plateNumber, model, vehicleType, color);
+
+      // Update user profile (mark as onboarded)
       await updateUserProfile({
         fullName,
         isOnboarded: true
       });
-
-      // Add vehicle
-      if (user) {
-        await addVehicle(user.uid, plateNumber, model, vehicleType, color);
-      }
 
       toast({
         title: "Welcome to PingME!",
@@ -66,11 +74,11 @@ const Onboarding = () => {
       });
 
       navigate("/dashboard");
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      console.error('Vehicle registration error:', error);
       toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
+        title: "Registration Failed",
+        description: error.message || "Something went wrong. Please check your connection and try again.",
         variant: "destructive"
       });
     } finally {

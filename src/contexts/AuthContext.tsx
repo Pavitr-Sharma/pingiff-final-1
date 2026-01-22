@@ -201,14 +201,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Update user profile
+  // Update user profile with timeout
   const updateUserProfile = async (data: Partial<UserProfile>) => {
     if (!user) throw new Error('No user logged in');
     
     try {
-      await setDoc(doc(db, 'users', user.uid), data, { merge: true });
-      const profile = await fetchUserProfile(user.uid);
-      setUserProfile(profile);
+      // Set timeout for Firestore operation
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Operation timed out')), 10000)
+      );
+      
+      await Promise.race([
+        setDoc(doc(db, 'users', user.uid), data, { merge: true }),
+        timeoutPromise
+      ]);
+      
+      // Update local state immediately with the new data
+      setUserProfile(prev => prev ? { ...prev, ...data } : null);
+      
+      // Fetch updated profile in background (don't block)
+      fetchUserProfile(user.uid).then(profile => {
+        if (profile) setUserProfile(profile);
+      }).catch(console.error);
+      
     } catch (error) {
       console.error('Update profile error:', error);
       throw error;

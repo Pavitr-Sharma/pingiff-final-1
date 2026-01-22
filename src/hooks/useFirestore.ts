@@ -160,7 +160,7 @@ export const useAlerts = (vehicleIds: string[]) => {
   return { alerts, loading };
 };
 
-// Add a new vehicle
+// Add a new vehicle with timeout
 export const addVehicle = async (
   ownerId: string,
   plateNumber: string,
@@ -170,18 +170,31 @@ export const addVehicle = async (
 ): Promise<string> => {
   const qrUuid = generateQrUuid();
   
-  const docRef = await addDoc(collection(db, 'vehicles'), {
-    ownerId,
-    plateNumber: plateNumber.toUpperCase(),
-    model,
-    type,
-    color: color || '',
-    qrUuid,
-    isActive: true,
-    createdAt: serverTimestamp()
-  });
+  // Set timeout for Firestore operation
+  const timeoutPromise = new Promise<never>((_, reject) => 
+    setTimeout(() => reject(new Error('Vehicle registration timed out. Please check your internet connection.')), 10000)
+  );
+  
+  try {
+    const docRef = await Promise.race([
+      addDoc(collection(db, 'vehicles'), {
+        ownerId,
+        plateNumber: plateNumber.toUpperCase(),
+        model,
+        type,
+        color: color || '',
+        qrUuid,
+        isActive: true,
+        createdAt: serverTimestamp()
+      }),
+      timeoutPromise
+    ]);
 
-  return docRef.id;
+    return docRef.id;
+  } catch (error: any) {
+    console.error('Add vehicle error:', error);
+    throw new Error(error.message || 'Failed to add vehicle. Please try again.');
+  }
 };
 
 // Update vehicle
