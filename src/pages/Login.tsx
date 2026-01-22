@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,25 +20,40 @@ const Login = () => {
 
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { signInWithGoogle, sendOTP, verifyOTP } = useAuth();
+  const location = useLocation();
+  const { signInWithGoogle, sendOTP, verifyOTP, user, userProfile, loading: authLoading } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      const from = (location.state as any)?.from?.pathname || "/dashboard";
+      if (userProfile?.isOnboarded) {
+        navigate(from, { replace: true });
+      } else {
+        navigate("/onboarding", { replace: true });
+      }
+    }
+  }, [user, userProfile, authLoading, navigate, location]);
 
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const res = await signInWithGoogle();
-      console.log(res);
+      await signInWithGoogle();
+      // Navigation will happen via useEffect when user state updates
       toast({
-        title: "Welcome!",
-        description: "Successfully signed in with Google.",
+        title: "Signing in...",
+        description: "Please wait while we sign you in.",
       });
-      navigate("/dashboard");
     } catch (error: any) {
       console.error(error);
-      toast({
-        title: "Login Failed",
-        description: error.message || "Could not sign in with Google.",
-        variant: "destructive",
-      });
+      // Don't show error for redirect (it will navigate away)
+      if (error.code !== 'auth/redirect-cancelled-by-user') {
+        toast({
+          title: "Login Failed",
+          description: error.message || "Could not sign in with Google.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -102,7 +117,7 @@ const Login = () => {
         title: "Logged In!",
         description: "Welcome to PingME.",
       });
-      navigate("/dashboard");
+      // Navigation will happen via useEffect when user state updates
     } catch (error: any) {
       console.error(error);
       toast({

@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
   User,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithPhoneNumber,
   signOut,
   onAuthStateChanged,
@@ -46,27 +48,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user profile from Firestore
-  const fetchUserProfile = async (uid: string): Promise<UserProfile | null> => {
-    try {
-      const userDoc = await getDoc(doc(db, 'users', uid));
-      if (userDoc.exists()) {
-        const data = userDoc.data();
-        return {
-          uid,
-          fullName: data.fullName || '',
-          email: data.email || null,
-          phoneNumber: data.phoneNumber || null,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          isOnboarded: data.isOnboarded || false
-        };
+  // Fetch user profile from Firestore with retry logic
+  const fetchUserProfile = async (uid: string, retries = 3): Promise<UserProfile | null> => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          return {
+            uid,
+            fullName: data.fullName || '',
+            email: data.email || null,
+            phoneNumber: data.phoneNumber || null,
+            createdAt: data.createdAt?.toDate() || new Date(),
+            isOnboarded: data.isOnboarded || false
+          };
+        }
+        return null;
+      } catch (error: any) {
+        console.error(`Error fetching user profile (attempt ${i + 1}):`, error);
+        if (i === retries - 1) return null;
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
       }
-      return null;
+    }
+    return null;
+  };
+
+  // Create user document if it doesn't exist
+  const ensureUserDocument = async (user: User): Promise<void> => {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (!userDoc.exists()) {
+        await setDoc(doc(db, 'users', user.uid), {
+          fullName: user.displayName || '',
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          createdAt: serverTimestamp(),
+          isOnboarded: false
+        });
+      }
     } catch (error) {
-      console.error('Error fetching user profile:', error);
-      return null;
+      console.error('Error ensuring user document:', error);
     }
   };
+
+  // Handle redirect result on mount
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          await ensureUserDocument(result.user);
+          const profile = await fetchUserProfile(result.user.uid);
+          setUserProfile(profile);
+        }
+      } catch (error) {
+        console.error('Redirect result error:', error);
+      }
+    };
+    handleRedirectResult();
+  }, []);
 
   // Listen for auth state changes
   useEffect(() => {
@@ -84,28 +126,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  // Google Sign In
+  // Google Sign In - Try popup first, fallback to redirect
   const signInWithGoogle = async () => {
     try {
+      // Try popup first
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
-      
-      // Check if user exists in Firestore
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (!userDoc.exists()) {
-        // Create new user document
-        await setDoc(doc(db, 'users', user.uid), {
-          fullName: user.displayName || '',
-          email: user.email,
-          phoneNumber: user.phoneNumber,
-          createdAt: serverTimestamp(),
-          isOnboarded: false
-        });
-      }
-      
+      await ensureUserDocument(user);
       const profile = await fetchUserProfile(user.uid);
       setUserProfile(profile);
-    } catch (error) {
+    } catch (error: any) {
+      // If popup blocked or COOP issues, use redirect
+      if (error.code === 'auth/popup-blocked' || 
+          error.code === 'auth/popup-closed-by-user' ||
+          error.code === 'auth/cancelled-popup-request' ||
+          error.message?.includes('Cross-Origin-Opener-Policy')) {
+        console.log('Popup failed, using redirect...');
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
       console.error('Google sign in error:', error);
       throw error;
     }
