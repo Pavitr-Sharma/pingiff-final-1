@@ -5,12 +5,12 @@ import { getFirestore } from "firebase/firestore";
 // ⚠️ PASTE YOUR FIREBASE CONFIG HERE
 // Get this from: Firebase Console → Project Settings → Your Apps → Config
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
+  apiKey: "AIzaSyBaFuw33zzZUme7CDUb7dpII3YeKgimN4w",
   authDomain: "pingmereg.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
+  projectId: "pingmereg",
+  storageBucket: "pingmereg.firebasestorage.app",
   messagingSenderId: "1098521383686",
-  appId: "YOUR_APP_ID",
+  appId: "1:1098521383686:web:b2c777e80121311a144487",
 };
 
 // Initialize Firebase
