@@ -43,12 +43,35 @@ enableIndexedDbPersistence(db).catch((err) => {
   }
 });
 
-// RecaptchaVerifier for phone auth
-export const setupRecaptcha = (containerId: string) => {
-  return new RecaptchaVerifier(auth, containerId, {
+// RecaptchaVerifier singleton for phone auth
+let recaptchaVerifier: RecaptchaVerifier | null = null;
+
+export const setupRecaptcha = (containerId: string): RecaptchaVerifier => {
+  if (recaptchaVerifier) {
+    return recaptchaVerifier;
+  }
+  
+  recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
     size: "invisible",
     callback: () => {},
+    "expired-callback": () => {
+      console.log("Recaptcha expired, resetting...");
+      clearRecaptcha();
+    },
   });
+  
+  return recaptchaVerifier;
+};
+
+export const clearRecaptcha = (): void => {
+  if (recaptchaVerifier) {
+    try {
+      recaptchaVerifier.clear();
+    } catch (e) {
+      console.warn("Error clearing recaptcha:", e);
+    }
+    recaptchaVerifier = null;
+  }
 };
 
 export default app;
