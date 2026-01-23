@@ -4,13 +4,11 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
-  signInWithPhoneNumber,
   signOut,
-  onAuthStateChanged,
-  ConfirmationResult
+  onAuthStateChanged
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db, googleProvider, setupRecaptcha, clearRecaptcha } from '@/lib/firebase';
+import { auth, db, googleProvider } from '@/lib/firebase';
 
 export interface UserProfile {
   uid: string;
@@ -27,8 +25,6 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
-  sendOTP: (phoneNumber: string, recaptchaContainerId: string) => Promise<ConfirmationResult>;
-  verifyOTP: (confirmationResult: ConfirmationResult, otp: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (data: Partial<UserProfile>) => Promise<void>;
   refreshUserProfile: () => Promise<void>;
@@ -176,50 +172,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Phone OTP - Send
-  const sendOTP = async (phoneNumber: string, recaptchaContainerId: string): Promise<ConfirmationResult> => {
-    try {
-      const recaptchaVerifier = setupRecaptcha(recaptchaContainerId);
-      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
-      return confirmationResult;
-    } catch (error: any) {
-      console.error('Send OTP error:', error);
-      clearRecaptcha();
-      
-      // Provide user-friendly error messages
-      if (error.code === 'auth/invalid-phone-number') {
-        throw new Error('Invalid phone number format. Please include country code (e.g., +91)');
-      } else if (error.code === 'auth/too-many-requests') {
-        throw new Error('Too many attempts. Please try again later.');
-      } else if (error.code === 'auth/captcha-check-failed') {
-        throw new Error('Security verification failed. Please refresh and try again.');
-      }
-      
-      throw error;
-    }
-  };
-
-  // Phone OTP - Verify
-  const verifyOTP = async (confirmationResult: ConfirmationResult, otp: string) => {
-    try {
-      const result = await confirmationResult.confirm(otp);
-      clearRecaptcha();
-      
-      const profile = await ensureUserDocument(result.user);
-      setUserProfile(profile);
-    } catch (error: any) {
-      console.error('Verify OTP error:', error);
-      
-      if (error.code === 'auth/invalid-verification-code') {
-        throw new Error('Invalid OTP. Please check and try again.');
-      } else if (error.code === 'auth/code-expired') {
-        throw new Error('OTP has expired. Please request a new one.');
-      }
-      
-      throw error;
-    }
-  };
-
   // Logout
   const logout = async () => {
     try {
@@ -267,8 +219,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       userProfile,
       loading,
       signInWithGoogle,
-      sendOTP,
-      verifyOTP,
       logout,
       updateUserProfile,
       refreshUserProfile

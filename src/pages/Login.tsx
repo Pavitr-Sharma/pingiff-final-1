@@ -2,34 +2,18 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { clearRecaptcha } from "@/lib/firebase";
 import logo from "@/assets/ping-me-logo.png";
-import { Phone, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
-import { ConfirmationResult } from "firebase/auth";
+import { Loader2 } from "lucide-react";
 
 const Login = () => {
-  const [method, setMethod] = useState<"google" | "phone" | null>(null);
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [showOtp, setShowOtp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const { signInWithGoogle, sendOTP, verifyOTP, user, userProfile, loading: authLoading } = useAuth();
-
-  // Cleanup recaptcha on unmount
-  useEffect(() => {
-    return () => {
-      clearRecaptcha();
-    };
-  }, []);
+  const { signInWithGoogle, user, userProfile, loading: authLoading } = useAuth();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -53,7 +37,7 @@ const Login = () => {
         description: "Please wait while we sign you in.",
       });
     } catch (error: any) {
-      console.error(error);
+      console.error("Google sign in error:", error);
       if (error.code !== 'auth/redirect-cancelled-by-user') {
         toast({
           title: "Login Failed",
@@ -66,92 +50,8 @@ const Login = () => {
     }
   };
 
-  const handlePhoneSendOtp = async () => {
-    const cleanPhone = phone.replace(/\s/g, '');
-    
-    if (cleanPhone.length < 10) {
-      toast({
-        title: "Invalid Phone",
-        description: "Please enter a valid phone number with country code.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const formattedPhone = cleanPhone.startsWith("+") ? cleanPhone : `+91${cleanPhone}`;
-      const result = await sendOTP(formattedPhone, "recaptcha-container");
-      setConfirmationResult(result);
-      setShowOtp(true);
-      toast({
-        title: "OTP Sent!",
-        description: `Verification code sent to ${formattedPhone}`,
-      });
-    } catch (error: any) {
-      console.error(error);
-      toast({
-        title: "Failed to Send OTP",
-        description: error.message || "Please check your phone number and try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePhoneVerify = async () => {
-    if (otp.length !== 6) {
-      toast({
-        title: "Invalid OTP",
-        description: "Please enter the 6-digit verification code.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!confirmationResult) {
-      toast({
-        title: "Session Expired",
-        description: "Please request a new OTP.",
-        variant: "destructive",
-      });
-      setShowOtp(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await verifyOTP(confirmationResult, otp);
-      toast({
-        title: "Welcome Back!",
-        description: "Login successful.",
-      });
-      // Navigation will happen via useEffect when user state updates
-    } catch (error: any) {
-      console.error(error);
-      toast({
-        title: "Verification Failed",
-        description: error.message || "Invalid OTP. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resetPhoneAuth = () => {
-    setShowOtp(false);
-    setOtp("");
-    setConfirmationResult(null);
-    clearRecaptcha();
-  };
-
   return (
     <div className="min-h-screen bg-secondary flex flex-col">
-      {/* Recaptcha Container */}
-      <div id="recaptcha-container"></div>
-
       {/* Header */}
       <header className="py-6 px-4">
         <Link to="/">
@@ -169,14 +69,16 @@ const Login = () => {
             <h1 className="text-2xl font-bold text-center mb-2">Welcome Back</h1>
             <p className="text-muted-foreground text-center mb-8">Login to access your dashboard</p>
 
-            {!method && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                <Button
-                  size="lg"
-                  className="w-full justify-center gap-3"
-                  onClick={handleGoogleLogin}
-                  disabled={loading}
-                >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+              <Button
+                size="lg"
+                className="w-full justify-center gap-3"
+                onClick={handleGoogleLogin}
+                disabled={loading || authLoading}
+              >
+                {loading || authLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path
                       fill="currentColor"
@@ -195,101 +97,10 @@ const Login = () => {
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                     />
                   </svg>
-                  Continue with Google
-                  {loading && <Loader2 className="w-5 h-5 animate-spin ml-2" />}
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="w-full justify-center gap-3"
-                  onClick={() => setMethod("phone")}
-                >
-                  <Phone className="w-5 h-5" />
-                  Continue with Phone
-                </Button>
-              </motion.div>
-            )}
-
-            {method === "phone" && !showOtp && (
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-                <div>
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="+91 98765 43210"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="mt-2"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Include country code (e.g., +91 for India)</p>
-                </div>
-                <Button
-                  size="lg"
-                  className="w-full"
-                  onClick={handlePhoneSendOtp}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      Send OTP
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full"
-                  onClick={() => setMethod(null)}
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to options
-                </Button>
-              </motion.div>
-            )}
-
-            {method === "phone" && showOtp && (
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-                <div>
-                  <Label htmlFor="otp">Enter OTP</Label>
-                  <Input
-                    id="otp"
-                    type="text"
-                    placeholder="Enter 6-digit code"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                    className="mt-2 text-center text-2xl tracking-widest"
-                    maxLength={6}
-                  />
-                </div>
-                <Button
-                  size="lg"
-                  className="w-full"
-                  onClick={handlePhoneVerify}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      Verify & Login
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full"
-                  onClick={resetPhoneAuth}
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Change phone number
-                </Button>
-              </motion.div>
-            )}
+                )}
+                {!loading && !authLoading && "Continue with Google"}
+              </Button>
+            </motion.div>
 
             <div className="mt-8 text-center">
               <p className="text-sm text-muted-foreground">
