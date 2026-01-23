@@ -9,6 +9,15 @@ const HomeHero = () => {
   return (
     <section className="bg-cream py-12 md:py-16">
       <div className="container">
+        {/* Welcome Message */}
+        {userProfile?.fullName && (
+          <div className="mb-8 p-4 bg-primary/10 rounded-xl border border-primary/20">
+            <p className="text-lg font-semibold">
+              Welcome back, <span className="text-primary">{userProfile.fullName.split(" ")[0]}</span>! 👋
+            </p>
+          </div>
+        )}
+        
         <div className="grid lg:grid-cols-2 gap-8 items-center">
           {/* Text Content */}
           <div className="flex flex-col gap-6">

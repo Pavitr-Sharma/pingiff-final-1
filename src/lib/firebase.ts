@@ -3,18 +3,6 @@ import { getAuth, GoogleAuthProvider, RecaptchaVerifier } from "firebase/auth";
 import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
 
-// Firebase Config
-// const firebaseConfig = {
-//   apiKey: "AIzaSyBvmo07xwtxvhs1Jbk4HrCrtS2B0QhQ-Ck",
-//   authDomain: "pingme-2a544.firebaseapp.com",
-//   projectId: "pingme-2a544",
-//   storageBucket: "pingme-2a544.firebasestorage.app",
-//   messagingSenderId: "302920931774",
-//   appId: "1:302920931774:web:e6710da2960ba1089081ef",
-//   measurementId: "G-5WDX03B74N",
-//   databaseURL: "https://pingme-2a544-default-rtdb.firebaseio.com",
-// };
-
 const firebaseConfig = {
   apiKey: "AIzaSyA29m_ZE0EEm5nAqLYVkjtSKU9rSSTts2Q",
   authDomain: "ping-me-eedd0.firebaseapp.com",
@@ -23,7 +11,9 @@ const firebaseConfig = {
   messagingSenderId: "441441409182",
   appId: "1:441441409182:web:d2ce715476830aaf9ac38f",
   measurementId: "G-JLHT8LK9HV",
+  databaseURL: "https://ping-me-eedd0-default-rtdb.firebaseio.com",
 };
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
@@ -42,12 +32,52 @@ enableIndexedDbPersistence(db).catch((err) => {
   }
 });
 
-// RecaptchaVerifier for phone auth
-export const setupRecaptcha = (containerId: string) => {
-  return new RecaptchaVerifier(auth, containerId, {
+// Store recaptcha verifier instance to prevent multiple instances
+let recaptchaVerifierInstance: RecaptchaVerifier | null = null;
+
+// RecaptchaVerifier for phone auth - improved version
+export const setupRecaptcha = (containerId: string): RecaptchaVerifier => {
+  // Clear any existing recaptcha instance
+  if (recaptchaVerifierInstance) {
+    try {
+      recaptchaVerifierInstance.clear();
+    } catch (e) {
+      console.warn("Could not clear existing recaptcha:", e);
+    }
+    recaptchaVerifierInstance = null;
+  }
+
+  // Clear the container element
+  const container = document.getElementById(containerId);
+  if (container) {
+    container.innerHTML = '';
+  }
+
+  // Create new instance
+  recaptchaVerifierInstance = new RecaptchaVerifier(auth, containerId, {
     size: "invisible",
-    callback: () => {},
+    callback: () => {
+      console.log("reCAPTCHA verified");
+    },
+    'expired-callback': () => {
+      console.log("reCAPTCHA expired");
+      recaptchaVerifierInstance = null;
+    }
   });
+
+  return recaptchaVerifierInstance;
+};
+
+// Clear recaptcha (call when component unmounts or after verification)
+export const clearRecaptcha = () => {
+  if (recaptchaVerifierInstance) {
+    try {
+      recaptchaVerifierInstance.clear();
+    } catch (e) {
+      console.warn("Could not clear recaptcha:", e);
+    }
+    recaptchaVerifierInstance = null;
+  }
 };
 
 export default app;

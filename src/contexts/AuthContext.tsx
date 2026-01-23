@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { 
   User,
   signInWithPopup,
@@ -10,11 +10,12 @@ import {
   ConfirmationResult
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db, googleProvider, setupRecaptcha } from '@/lib/firebase';
+import { auth, db, googleProvider, setupRecaptcha, clearRecaptcha } from '@/lib/firebase';
 
-interface UserProfile {
+export interface UserProfile {
   uid: string;
   fullName: string;
+  age?: number;
   email: string | null;
   phoneNumber: string | null;
   createdAt: Date;
@@ -30,7 +31,7 @@ interface AuthContextType {
   verifyOTP: (confirmationResult: ConfirmationResult, otp: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (data: Partial<UserProfile>) => Promise<void>;
-  checkUserOnboarded: () => Promise<boolean>;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,8 +49,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user profile from Firestore with retry logic
-  const fetchUserProfile = async (uid: string, retries = 3): Promise<UserProfile | null> => {
+  // Fetch user profile from Firestore
+  const fetchUserProfile = useCallback(async (uid: string, retries = 3): Promise<UserProfile | null> => {
     for (let i = 0; i < retries; i++) {
       try {
         const userDoc = await getDoc(doc(db, 'users', uid));
@@ -58,8 +59,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return {
             uid,
             fullName: data.fullName || '',
+            age: data.age || undefined,
             email: data.email || null,
-            phoneNumber: data.phoneNumber || null,
+            phoneNumber: data.phoneNumber || data.phone || null,
             createdAt: data.createdAt?.toDate() || new Date(),
             isOnboarded: data.isOnboarded || false
           };
@@ -68,28 +70,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error: any) {
         console.error(`Error fetching user profile (attempt ${i + 1}):`, error);
         if (i === retries - 1) return null;
-        // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
       }
     }
     return null;
-  };
+  }, []);
+
+  // Refresh user profile
+  const refreshUserProfile = useCallback(async () => {
+    if (user) {
+      const profile = await fetchUserProfile(user.uid);
+      if (profile) {
+        setUserProfile(profile);
+      }
+    }
+  }, [user, fetchUserProfile]);
 
   // Create user document if it doesn't exist
-  const ensureUserDocument = async (user: User): Promise<void> => {
+  const ensureUserDocument = async (firebaseUser: User): Promise<UserProfile | null> => {
     try {
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      
       if (!userDoc.exists()) {
-        await setDoc(doc(db, 'users', user.uid), {
-          fullName: user.displayName || '',
-          email: user.email,
-          phoneNumber: user.phoneNumber,
+        // Create new user document
+        const newUserData = {
+          fullName: firebaseUser.displayName || '',
+          email: firebaseUser.email || null,
+          phoneNumber: firebaseUser.phoneNumber || null,
           createdAt: serverTimestamp(),
           isOnboarded: false
-        });
+        };
+        
+        await setDoc(doc(db, 'users', firebaseUser.uid), newUserData);
+        
+        return {
+          uid: firebaseUser.uid,
+          fullName: firebaseUser.displayName || '',
+          email: firebaseUser.email || null,
+          phoneNumber: firebaseUser.phoneNumber || null,
+          createdAt: new Date(),
+          isOnboarded: false
+        };
       }
+      
+      // Return existing profile
+      return await fetchUserProfile(firebaseUser.uid);
     } catch (error) {
       console.error('Error ensuring user document:', error);
+      return null;
     }
   };
 
@@ -99,8 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const result = await getRedirectResult(auth);
         if (result?.user) {
-          await ensureUserDocument(result.user);
-          const profile = await fetchUserProfile(result.user.uid);
+          const profile = await ensureUserDocument(result.user);
           setUserProfile(profile);
         }
       } catch (error) {
@@ -112,28 +139,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Listen for auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        const profile = await fetchUserProfile(user.uid);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      
+      if (firebaseUser) {
+        const profile = await fetchUserProfile(firebaseUser.uid);
         setUserProfile(profile);
       } else {
         setUserProfile(null);
       }
+      
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [fetchUserProfile]);
 
-  // Google Sign In - Try popup first, fallback to redirect
+  // Google Sign In
   const signInWithGoogle = async () => {
     try {
-      // Try popup first
       const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      await ensureUserDocument(user);
-      const profile = await fetchUserProfile(user.uid);
+      const profile = await ensureUserDocument(result.user);
       setUserProfile(profile);
     } catch (error: any) {
       // If popup blocked or COOP issues, use redirect
@@ -151,13 +177,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Phone OTP - Send
-  const sendOTP = async (phoneNumber: string, recaptchaContainerId: string) => {
+  const sendOTP = async (phoneNumber: string, recaptchaContainerId: string): Promise<ConfirmationResult> => {
     try {
       const recaptchaVerifier = setupRecaptcha(recaptchaContainerId);
       const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
       return confirmationResult;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Send OTP error:', error);
+      clearRecaptcha();
+      
+      // Provide user-friendly error messages
+      if (error.code === 'auth/invalid-phone-number') {
+        throw new Error('Invalid phone number format. Please include country code (e.g., +91)');
+      } else if (error.code === 'auth/too-many-requests') {
+        throw new Error('Too many attempts. Please try again later.');
+      } else if (error.code === 'auth/captcha-check-failed') {
+        throw new Error('Security verification failed. Please refresh and try again.');
+      }
+      
       throw error;
     }
   };
@@ -166,25 +203,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const verifyOTP = async (confirmationResult: ConfirmationResult, otp: string) => {
     try {
       const result = await confirmationResult.confirm(otp);
-      const user = result.user;
+      clearRecaptcha();
       
-      // Check if user exists in Firestore
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (!userDoc.exists()) {
-        // Create new user document
-        await setDoc(doc(db, 'users', user.uid), {
-          fullName: '',
-          email: null,
-          phoneNumber: user.phoneNumber,
-          createdAt: serverTimestamp(),
-          isOnboarded: false
-        });
+      const profile = await ensureUserDocument(result.user);
+      setUserProfile(profile);
+    } catch (error: any) {
+      console.error('Verify OTP error:', error);
+      
+      if (error.code === 'auth/invalid-verification-code') {
+        throw new Error('Invalid OTP. Please check and try again.');
+      } else if (error.code === 'auth/code-expired') {
+        throw new Error('OTP has expired. Please request a new one.');
       }
       
-      const profile = await fetchUserProfile(user.uid);
-      setUserProfile(profile);
-    } catch (error) {
-      console.error('Verify OTP error:', error);
       throw error;
     }
   };
@@ -201,40 +232,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Update user profile with timeout
+  // Update user profile
   const updateUserProfile = async (data: Partial<UserProfile>) => {
     if (!user) throw new Error('No user logged in');
     
     try {
-      // Set timeout for Firestore operation
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Operation timed out')), 10000)
+        setTimeout(() => reject(new Error('Operation timed out. Please check your connection.')), 10000)
       );
       
+      // Prepare data for Firestore (remove uid as it's not stored)
+      const { uid, ...updateData } = data as any;
+      
       await Promise.race([
-        setDoc(doc(db, 'users', user.uid), data, { merge: true }),
+        setDoc(doc(db, 'users', user.uid), updateData, { merge: true }),
         timeoutPromise
       ]);
       
-      // Update local state immediately with the new data
+      // Update local state immediately
       setUserProfile(prev => prev ? { ...prev, ...data } : null);
       
-      // Fetch updated profile in background (don't block)
-      fetchUserProfile(user.uid).then(profile => {
-        if (profile) setUserProfile(profile);
-      }).catch(console.error);
+      // Refresh from server in background
+      refreshUserProfile().catch(console.error);
       
     } catch (error) {
       console.error('Update profile error:', error);
       throw error;
     }
-  };
-
-  // Check if user completed onboarding
-  const checkUserOnboarded = async (): Promise<boolean> => {
-    if (!user) return false;
-    const profile = await fetchUserProfile(user.uid);
-    return profile?.isOnboarded || false;
   };
 
   return (
@@ -247,7 +271,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       verifyOTP,
       logout,
       updateUserProfile,
-      checkUserOnboarded
+      refreshUserProfile
     }}>
       {children}
     </AuthContext.Provider>

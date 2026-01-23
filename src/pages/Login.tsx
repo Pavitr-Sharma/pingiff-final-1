@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { clearRecaptcha } from "@/lib/firebase";
 import logo from "@/assets/ping-me-logo.png";
 import { Phone, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { ConfirmationResult } from "firebase/auth";
@@ -23,13 +24,21 @@ const Login = () => {
   const location = useLocation();
   const { signInWithGoogle, sendOTP, verifyOTP, user, userProfile, loading: authLoading } = useAuth();
 
+  // Cleanup recaptcha on unmount
+  useEffect(() => {
+    return () => {
+      clearRecaptcha();
+    };
+  }, []);
+
   // Redirect if already logged in
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading && user && userProfile !== undefined) {
       const from = (location.state as any)?.from?.pathname || "/dashboard";
+      
       if (userProfile?.isOnboarded) {
         navigate(from, { replace: true });
-      } else {
+      } else if (userProfile && !userProfile.isOnboarded) {
         navigate("/onboarding", { replace: true });
       }
     }
@@ -39,14 +48,12 @@ const Login = () => {
     setLoading(true);
     try {
       await signInWithGoogle();
-      // Navigation will happen via useEffect when user state updates
       toast({
         title: "Signing in...",
         description: "Please wait while we sign you in.",
       });
     } catch (error: any) {
       console.error(error);
-      // Don't show error for redirect (it will navigate away)
       if (error.code !== 'auth/redirect-cancelled-by-user') {
         toast({
           title: "Login Failed",
@@ -60,7 +67,9 @@ const Login = () => {
   };
 
   const handlePhoneSendOtp = async () => {
-    if (phone.length < 10) {
+    const cleanPhone = phone.replace(/\s/g, '');
+    
+    if (cleanPhone.length < 10) {
       toast({
         title: "Invalid Phone",
         description: "Please enter a valid phone number with country code.",
@@ -71,13 +80,13 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const formattedPhone = phone.startsWith("+") ? phone : `+91${phone}`;
+      const formattedPhone = cleanPhone.startsWith("+") ? cleanPhone : `+91${cleanPhone}`;
       const result = await sendOTP(formattedPhone, "recaptcha-container");
       setConfirmationResult(result);
       setShowOtp(true);
       toast({
-        title: "OTP Sent",
-        description: "A verification code has been sent to your phone.",
+        title: "OTP Sent!",
+        description: `Verification code sent to ${formattedPhone}`,
       });
     } catch (error: any) {
       console.error(error);
@@ -92,7 +101,7 @@ const Login = () => {
   };
 
   const handlePhoneVerify = async () => {
-    if (otp.length < 6) {
+    if (otp.length !== 6) {
       toast({
         title: "Invalid OTP",
         description: "Please enter the 6-digit verification code.",
@@ -103,10 +112,11 @@ const Login = () => {
 
     if (!confirmationResult) {
       toast({
-        title: "Error",
+        title: "Session Expired",
         description: "Please request a new OTP.",
         variant: "destructive",
       });
+      setShowOtp(false);
       return;
     }
 
@@ -114,8 +124,8 @@ const Login = () => {
     try {
       await verifyOTP(confirmationResult, otp);
       toast({
-        title: "Logged In!",
-        description: "Welcome to PingME.",
+        title: "Welcome Back!",
+        description: "Login successful.",
       });
       // Navigation will happen via useEffect when user state updates
     } catch (error: any) {
@@ -130,9 +140,16 @@ const Login = () => {
     }
   };
 
+  const resetPhoneAuth = () => {
+    setShowOtp(false);
+    setOtp("");
+    setConfirmationResult(null);
+    clearRecaptcha();
+  };
+
   return (
-    <div className="min-h-screen bg-ping-cream flex flex-col">
-      {/* Recaptcha Container (invisible) */}
+    <div className="min-h-screen bg-secondary flex flex-col">
+      {/* Recaptcha Container */}
       <div id="recaptcha-container"></div>
 
       {/* Header */}
@@ -147,19 +164,16 @@ const Login = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-3xl p-8 shadow-xl border-2 border-ping-yellow/30"
-            style={{
-              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 215, 0, 0.1) inset",
-            }}
+            className="bg-card rounded-3xl p-8 shadow-xl border border-border"
           >
-            <h1 className="text-2xl font-bold text-center mb-2 text-ping-ink">Welcome Back</h1>
-            <p className="text-ping-brown text-center mb-8">Login to access your dashboard</p>
+            <h1 className="text-2xl font-bold text-center mb-2">Welcome Back</h1>
+            <p className="text-muted-foreground text-center mb-8">Login to access your dashboard</p>
 
             {!method && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                 <Button
                   size="lg"
-                  className="w-full justify-center gap-3 bg-ping-yellow text-ping-ink hover:bg-ping-yellow/90 font-semibold"
+                  className="w-full justify-center gap-3"
                   onClick={handleGoogleLogin}
                   disabled={loading}
                 >
@@ -184,10 +198,11 @@ const Login = () => {
                   Continue with Google
                   {loading && <Loader2 className="w-5 h-5 animate-spin ml-2" />}
                 </Button>
+                
                 <Button
                   variant="outline"
                   size="lg"
-                  className="w-full justify-center gap-3 border-2 border-ping-ink/20 hover:border-ping-yellow hover:bg-ping-yellow/10"
+                  className="w-full justify-center gap-3"
                   onClick={() => setMethod("phone")}
                 >
                   <Phone className="w-5 h-5" />
@@ -199,22 +214,20 @@ const Login = () => {
             {method === "phone" && !showOtp && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
                 <div>
-                  <Label htmlFor="phone" className="text-ping-ink font-medium">
-                    Phone Number
-                  </Label>
+                  <Label htmlFor="phone">Phone Number</Label>
                   <Input
                     id="phone"
                     type="tel"
                     placeholder="+91 98765 43210"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="mt-2 border-2 border-ping-ink/20 focus:border-ping-yellow"
+                    className="mt-2"
                   />
-                  <p className="text-xs text-ping-brown mt-1">Include country code (e.g., +91 for India)</p>
+                  <p className="text-xs text-muted-foreground mt-1">Include country code (e.g., +91 for India)</p>
                 </div>
                 <Button
                   size="lg"
-                  className="w-full bg-ping-yellow text-ping-ink hover:bg-ping-yellow/90 font-semibold"
+                  className="w-full"
                   onClick={handlePhoneSendOtp}
                   disabled={loading}
                 >
@@ -229,7 +242,7 @@ const Login = () => {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="w-full text-ping-brown hover:text-ping-ink"
+                  className="w-full"
                   onClick={() => setMethod(null)}
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
@@ -241,22 +254,20 @@ const Login = () => {
             {method === "phone" && showOtp && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
                 <div>
-                  <Label htmlFor="otp" className="text-ping-ink font-medium">
-                    Enter OTP
-                  </Label>
+                  <Label htmlFor="otp">Enter OTP</Label>
                   <Input
                     id="otp"
                     type="text"
                     placeholder="Enter 6-digit code"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                    className="mt-2 text-center text-2xl tracking-widest border-2 border-ping-ink/20 focus:border-ping-yellow"
+                    className="mt-2 text-center text-2xl tracking-widest"
                     maxLength={6}
                   />
                 </div>
                 <Button
                   size="lg"
-                  className="w-full bg-ping-yellow text-ping-ink hover:bg-ping-yellow/90 font-semibold"
+                  className="w-full"
                   onClick={handlePhoneVerify}
                   disabled={loading}
                 >
@@ -271,11 +282,8 @@ const Login = () => {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="w-full text-ping-brown hover:text-ping-ink"
-                  onClick={() => {
-                    setShowOtp(false);
-                    setOtp("");
-                  }}
+                  className="w-full"
+                  onClick={resetPhoneAuth}
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Change phone number
@@ -284,12 +292,9 @@ const Login = () => {
             )}
 
             <div className="mt-8 text-center">
-              <p className="text-sm text-ping-brown">
+              <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
-                <Link
-                  to="/register"
-                  className="font-semibold text-ping-ink relative after:content-[''] after:absolute after:bottom-[-2px] after:left-0 after:right-0 after:h-0.5 after:bg-ping-yellow after:transform after:scale-x-0 after:transition-transform hover:after:scale-x-100"
-                >
+                <Link to="/register" className="font-semibold text-foreground hover:underline">
                   Sign Up
                 </Link>
               </p>

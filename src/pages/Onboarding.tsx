@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/ping-me-logo.png";
-import { User, Car, ArrowRight, Check } from "lucide-react";
+import { User, Car, ArrowRight, Check, ArrowLeft, Loader2 } from "lucide-react";
 import { addVehicle } from "@/hooks/useFirestore";
 
 const Onboarding = () => {
@@ -21,14 +21,46 @@ const Onboarding = () => {
   const [loading, setLoading] = useState(false);
   
   const { toast } = useToast();
-  const { user, updateUserProfile } = useAuth();
+  const { user, userProfile, updateUserProfile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  const handleProfileSubmit = async () => {
-    if (!fullName.trim() || !age) {
+  // Pre-fill name if available from Google
+  useEffect(() => {
+    if (userProfile?.fullName) {
+      setFullName(userProfile.fullName);
+    } else if (user?.displayName) {
+      setFullName(user.displayName);
+    }
+  }, [userProfile, user]);
+
+  // Redirect if already onboarded
+  useEffect(() => {
+    if (!authLoading && userProfile?.isOnboarded) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [userProfile, authLoading, navigate]);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/login", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
+
+  const handleProfileSubmit = () => {
+    if (!fullName.trim()) {
       toast({
-        title: "Required Fields",
-        description: "Please fill in your name and age.",
+        title: "Name Required",
+        description: "Please enter your full name.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!age || parseInt(age) < 18) {
+      toast({
+        title: "Age Required",
+        description: "Please enter a valid age (18+).",
         variant: "destructive"
       });
       return;
@@ -38,10 +70,19 @@ const Onboarding = () => {
   };
 
   const handleVehicleSubmit = async () => {
-    if (!plateNumber.trim() || !model.trim()) {
+    if (!plateNumber.trim()) {
       toast({
-        title: "Required Fields",
-        description: "Please fill in your vehicle details.",
+        title: "Plate Number Required",
+        description: "Please enter your vehicle plate number.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!model.trim()) {
+      toast({
+        title: "Model Required",
+        description: "Please enter your vehicle model.",
         variant: "destructive"
       });
       return;
@@ -49,8 +90,8 @@ const Onboarding = () => {
 
     if (!user) {
       toast({
-        title: "Authentication Error",
-        description: "Please login again to continue.",
+        title: "Session Expired",
+        description: "Please login again.",
         variant: "destructive"
       });
       navigate("/login");
@@ -59,32 +100,42 @@ const Onboarding = () => {
 
     setLoading(true);
     try {
-      // Add vehicle first (the main action)
+      // First add the vehicle
       await addVehicle(user.uid, plateNumber, model, vehicleType, color);
 
-      // Update user profile (mark as onboarded)
+      // Then update user profile with name, age, and mark as onboarded
       await updateUserProfile({
-        fullName,
+        fullName: fullName.trim(),
+        age: parseInt(age),
         isOnboarded: true
       });
 
       toast({
-        title: "Welcome to PingME!",
-        description: "Your profile and vehicle have been registered.",
+        title: "Welcome to PingME! 🎉",
+        description: `Your vehicle ${plateNumber} has been registered.`,
       });
 
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     } catch (error: any) {
-      console.error('Vehicle registration error:', error);
+      console.error('Registration error:', error);
       toast({
         title: "Registration Failed",
-        description: error.message || "Something went wrong. Please check your connection and try again.",
+        description: error.message || "Please check your connection and try again.",
         variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-secondary flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-secondary flex flex-col">
@@ -98,17 +149,21 @@ const Onboarding = () => {
           {/* Progress Steps */}
           <div className="flex items-center justify-center gap-4 mb-8">
             <div className={`flex items-center gap-2 ${step >= 1 ? 'text-foreground' : 'text-muted-foreground'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? 'bg-primary' : 'bg-muted'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                step > 1 ? 'bg-primary text-primary-foreground' : step === 1 ? 'bg-primary text-primary-foreground' : 'bg-muted'
+              }`}>
                 {step > 1 ? <Check className="w-4 h-4" /> : <User className="w-4 h-4" />}
               </div>
-              <span className="text-sm font-medium">Profile</span>
+              <span className="text-sm font-medium hidden sm:inline">Profile</span>
             </div>
-            <div className="w-8 h-px bg-border" />
+            <div className={`w-8 h-px transition-colors ${step > 1 ? 'bg-primary' : 'bg-border'}`} />
             <div className={`flex items-center gap-2 ${step >= 2 ? 'text-foreground' : 'text-muted-foreground'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? 'bg-primary' : 'bg-muted'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                step >= 2 ? 'bg-primary text-primary-foreground' : 'bg-muted'
+              }`}>
                 <Car className="w-4 h-4" />
               </div>
-              <span className="text-sm font-medium">Vehicle</span>
+              <span className="text-sm font-medium hidden sm:inline">Vehicle</span>
             </div>
           </div>
 
@@ -123,16 +178,16 @@ const Onboarding = () => {
               <>
                 <h1 className="text-2xl font-bold text-center mb-2">Complete Your Profile</h1>
                 <p className="text-muted-foreground text-center mb-8">
-                  Tell us a bit about yourself
+                  Tell us about yourself
                 </p>
 
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="fullName">Full Name</Label>
+                    <Label htmlFor="fullName">Full Name *</Label>
                     <Input
                       id="fullName"
                       type="text"
-                      placeholder="John Doe"
+                      placeholder="Enter your full name"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       className="mt-2"
@@ -140,11 +195,11 @@ const Onboarding = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="age">Age</Label>
+                    <Label htmlFor="age">Age *</Label>
                     <Input
                       id="age"
                       type="number"
-                      placeholder="25"
+                      placeholder="Enter your age"
                       value={age}
                       onChange={(e) => setAge(e.target.value)}
                       className="mt-2"
@@ -153,9 +208,9 @@ const Onboarding = () => {
                     />
                   </div>
 
-                  <Button size="full" onClick={handleProfileSubmit}>
+                  <Button size="lg" className="w-full" onClick={handleProfileSubmit}>
                     Continue
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
               </>
@@ -165,16 +220,16 @@ const Onboarding = () => {
               <>
                 <h1 className="text-2xl font-bold text-center mb-2">Register Your Vehicle</h1>
                 <p className="text-muted-foreground text-center mb-8">
-                  Add your primary vehicle details
+                  Add your primary vehicle
                 </p>
 
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="plateNumber">Plate Number</Label>
+                    <Label htmlFor="plateNumber">Plate Number *</Label>
                     <Input
                       id="plateNumber"
                       type="text"
-                      placeholder="UP53 DJ1234"
+                      placeholder="e.g., MH12AB1234"
                       value={plateNumber}
                       onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
                       className="mt-2"
@@ -182,11 +237,11 @@ const Onboarding = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="model">Vehicle Model</Label>
+                    <Label htmlFor="model">Vehicle Model *</Label>
                     <Input
                       id="model"
                       type="text"
-                      placeholder="Honda Activa"
+                      placeholder="e.g., Honda Activa, Maruti Swift"
                       value={model}
                       onChange={(e) => setModel(e.target.value)}
                       className="mt-2"
@@ -194,7 +249,7 @@ const Onboarding = () => {
                   </div>
 
                   <div>
-                    <Label>Vehicle Type</Label>
+                    <Label>Vehicle Type *</Label>
                     <div className="grid grid-cols-2 gap-3 mt-2">
                       <button
                         type="button"
@@ -228,25 +283,36 @@ const Onboarding = () => {
                     <Input
                       id="color"
                       type="text"
-                      placeholder="White"
+                      placeholder="e.g., White, Black, Red"
                       value={color}
                       onChange={(e) => setColor(e.target.value)}
                       className="mt-2"
                     />
                   </div>
 
-                  <Button size="full" onClick={handleVehicleSubmit} disabled={loading}>
+                  <Button 
+                    size="lg" 
+                    className="w-full" 
+                    onClick={handleVehicleSubmit} 
+                    disabled={loading}
+                  >
                     {loading ? (
-                      <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                      <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
                       <>
                         Complete Setup
-                        <Check className="w-4 h-4" />
+                        <Check className="w-4 h-4 ml-2" />
                       </>
                     )}
                   </Button>
 
-                  <Button variant="ghost" size="full" onClick={() => setStep(1)}>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full" 
+                    onClick={() => setStep(1)}
+                    disabled={loading}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
                     Go Back
                   </Button>
                 </div>
