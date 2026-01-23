@@ -2,18 +2,18 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { 
-  QrCode, 
-  Plus, 
-  ShoppingCart, 
-  User, 
+import {
+  QrCode,
+  Plus,
+  ShoppingCart,
+  User,
   LogOut,
   Car,
   Bell,
   Settings,
   AlertCircle,
   Loader2,
-  MessageCircle
+  MessageCircle,
 } from "lucide-react";
 import VehicleQRCode from "@/components/qr/VehicleQRCode";
 import logo from "@/assets/ping-me-logo.png";
@@ -21,26 +21,20 @@ import productCard from "@/assets/product-card.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { useVehicles, useAlerts, addVehicle } from "@/hooks/useFirestore";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const Dashboard = () => {
   const { user, userProfile, logout } = useAuth();
   const { vehicles, loading: vehiclesLoading } = useVehicles(user?.uid);
-  const vehicleIds = vehicles.map(v => v.id);
+  const vehicleIds = vehicles.map((v) => v.id);
   const { alerts } = useAlerts(vehicleIds);
   const { toast } = useToast();
   const navigate = useNavigate();
-  
+
   const [showAddVehicle, setShowAddVehicle] = useState(false);
-  
+
   // Add vehicle form state
   const [newPlate, setNewPlate] = useState("");
   const [newModel, setNewModel] = useState("");
@@ -48,7 +42,7 @@ const Dashboard = () => {
   const [newColor, setNewColor] = useState("");
   const [addingVehicle, setAddingVehicle] = useState(false);
 
-  const pendingAlerts = alerts.filter(a => a.status === 'pending').length;
+  const pendingAlerts = alerts.filter((a) => a.status === "pending").length;
 
   const handleLogout = async () => {
     try {
@@ -58,7 +52,7 @@ const Dashboard = () => {
       toast({
         title: "Logout Failed",
         description: "Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -68,7 +62,7 @@ const Dashboard = () => {
       toast({
         title: "Required Fields",
         description: "Please fill in plate number and model.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -90,13 +84,12 @@ const Dashboard = () => {
       toast({
         title: "Failed to Add Vehicle",
         description: "Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setAddingVehicle(false);
     }
   };
-
 
   return (
     <div className="min-h-screen bg-secondary">
@@ -124,14 +117,8 @@ const Dashboard = () => {
 
       <div className="container py-8">
         {/* Welcome Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-2xl font-bold">
-            Welcome, {userProfile?.fullName?.split(" ")[0] || "User"}!
-          </h1>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <h1 className="text-2xl font-bold">Welcome, {userProfile?.fullName?.split(" ")[0] || "User"}!</h1>
           <p className="text-muted-foreground">Manage your vehicle protection</p>
         </motion.div>
 
@@ -141,7 +128,7 @@ const Dashboard = () => {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : vehicles.length === 0 ? (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="bg-card rounded-2xl p-8 text-center border border-border mb-6"
@@ -176,12 +163,12 @@ const Dashboard = () => {
                       </p>
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    vehicle.isActive 
-                      ? 'bg-success/10 text-success' 
-                      : 'bg-muted text-muted-foreground'
-                  }`}>
-                    {vehicle.isActive ? 'Active' : 'Inactive'}
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      vehicle.isActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {vehicle.isActive ? "Active" : "Inactive"}
                   </span>
                 </div>
 
@@ -201,7 +188,7 @@ const Dashboard = () => {
                         <VehicleQRCode
                           qrUuid={vehicle.qrUuid}
                           plateNumber={vehicle.plateNumber}
-                          vehicleModel={`${vehicle.color || ''} ${vehicle.model}`}
+                          vehicleModel={`${vehicle.color || ""} ${vehicle.model}`}
                         />
                       </div>
                     </DialogContent>
@@ -256,9 +243,7 @@ const Dashboard = () => {
                       type="button"
                       onClick={() => setNewType("Car")}
                       className={`p-3 rounded-xl border-2 transition-all ${
-                        newType === "Car"
-                          ? "border-primary bg-primary/10"
-                          : "border-border hover:border-primary/50"
+                        newType === "Car" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
                       }`}
                     >
                       <span className="text-xl">🚗</span>
@@ -268,9 +253,7 @@ const Dashboard = () => {
                       type="button"
                       onClick={() => setNewType("Bike")}
                       className={`p-3 rounded-xl border-2 transition-all ${
-                        newType === "Bike"
-                          ? "border-primary bg-primary/10"
-                          : "border-border hover:border-primary/50"
+                        newType === "Bike" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
                       }`}
                     >
                       <span className="text-xl">🏍️</span>
@@ -302,7 +285,7 @@ const Dashboard = () => {
             </DialogContent>
           </Dialog>
 
-          <button 
+          <button
             className="bg-card p-4 rounded-2xl border border-border text-left hover:border-primary/50 hover:shadow-md transition-all"
             onClick={() => toast({ title: "Coming Soon", description: "Alert history will be available soon!" })}
           >
@@ -322,19 +305,15 @@ const Dashboard = () => {
         {/* Order Section */}
         <div className="mb-8">
           <h2 className="text-lg font-bold mb-4">Order Products</h2>
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="bg-card rounded-2xl overflow-hidden border border-border shadow-lg"
           >
             <div className="aspect-[16/9] bg-primary/10 relative">
-              <img 
-                src={productCard} 
-                alt="PingME Card" 
-                className="w-full h-full object-cover"
-              />
+              <img src={productCard} alt="PingME Card" className="w-300px h-300px object-cover" />
             </div>
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -347,9 +326,11 @@ const Dashboard = () => {
                   <p className="text-xs text-muted-foreground line-through">₹299</p>
                 </div>
               </div>
-              <Button 
+              <Button
                 size="full"
-                onClick={() => toast({ title: "Coming Soon", description: "Payment integration will be available soon!" })}
+                onClick={() =>
+                  toast({ title: "Coming Soon", description: "Payment integration will be available soon!" })
+                }
               >
                 <ShoppingCart className="w-4 h-4" />
                 Order Now
@@ -369,7 +350,7 @@ const Dashboard = () => {
         </div>
 
         {/* Profile Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -380,15 +361,15 @@ const Dashboard = () => {
               <User className="w-6 h-6 text-primary-foreground" />
             </div>
             <div>
-              <h3 className="font-bold">{userProfile?.fullName || 'User'}</h3>
+              <h3 className="font-bold">{userProfile?.fullName || "User"}</h3>
               <p className="text-muted-foreground text-sm">
-                {userProfile?.phoneNumber || userProfile?.email || 'No contact info'}
+                {userProfile?.phoneNumber || userProfile?.email || "No contact info"}
               </p>
             </div>
           </div>
-          <Button 
-            variant="outline" 
-            size="full" 
+          <Button
+            variant="outline"
+            size="full"
             className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
             onClick={handleLogout}
           >
@@ -401,19 +382,11 @@ const Dashboard = () => {
   );
 };
 
-const CustomProductCard = ({
-  emoji,
-  title,
-  price,
-}: {
-  emoji: string;
-  title: string;
-  price: string;
-}) => {
+const CustomProductCard = ({ emoji, title, price }: { emoji: string; title: string; price: string }) => {
   const { toast } = useToast();
-  
+
   return (
-    <div 
+    <div
       onClick={() => toast({ title: "Coming Soon", description: "Custom products will be available soon!" })}
       className="bg-card p-4 rounded-xl border border-border text-center hover:border-primary/50 transition-colors cursor-pointer"
     >
