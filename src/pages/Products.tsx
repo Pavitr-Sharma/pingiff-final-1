@@ -65,7 +65,7 @@ const Products = () => {
 
                 <div className="aspect-square bg-secondary rounded-xl mb-4 flex items-center justify-center">
                   {product.image ? (
-                    <img src={product.image} alt={product.title} className="max-w-[90%] max-h-[90%] object-contain" />
+                    <img src={product.image} alt={product.title} className="max-w-[100%] max-h-[100%] object-contain" />
                   ) : (
                     <span className="text-6xl">{product.emoji}</span>
                   )}
