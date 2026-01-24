@@ -31,7 +31,7 @@ const HomeHero = () => {
               PingMe transforms windshields, shop fronts, helmets, and merch into interactive hubs that route fans to
               whatever matters—profiles, offers, playlists, or support.
             </p>
-            <div className="flex flex-wrap gap-4 mt-2">
+            <div className="flex flex-wrap gap-4 mt-2 justify-center lg:justify-start">
               <Link to="/dashboard">
                 <Button className="bg-[hsl(30,75%,26%)] hover:bg-[hsl(30,75%,20%)] text-white font-semibold px-6 py-3 rounded-lg btn-hover-lift">
                   Shop Signature Kits
