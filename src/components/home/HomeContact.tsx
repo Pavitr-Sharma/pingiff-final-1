@@ -26,7 +26,7 @@ const HomeContact = () => {
 
         <div className="flex flex-wrap justify-between gap-4 mb-8">
           <p className="text-brown">Address: 745 Kesho Ram Complex Sector 45 Chandigarh</p>
-          <p className="text-brown">Call Us: +91 987654320</p>
+          <p className="text-brown">Call Us: +91734734007</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6 max-w-3xl">
