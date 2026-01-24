@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, MessageCircle, X, User, Clock, AlertCircle } from "lucide-react";
+import { Send, MessageCircle, X, User, Clock, AlertCircle, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,6 +10,7 @@ import {
   subscribeToMessages,
   endChatSession,
   getSessionTimeRemaining,
+  setScannerName,
 } from "@/lib/chatService";
 
 interface AnonymousChatProps {
@@ -17,15 +18,18 @@ interface AnonymousChatProps {
   vehiclePlate: string;
   isOwner?: boolean;
   onClose?: () => void;
+  scannerName?: string; // Pre-set scanner name
 }
 
-const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose }: AnonymousChatProps) => {
+const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose, scannerName: initialScannerName }: AnonymousChatProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(30);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [scannerNameInput, setScannerNameInput] = useState(initialScannerName || "");
+  const [hasIdentified, setHasIdentified] = useState(isOwner || !!initialScannerName);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const senderType = isOwner ? "owner" : "scanner";
 
@@ -47,6 +51,12 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose }: An
         
         const remaining = await getSessionTimeRemaining(vehicleId);
         setTimeRemaining(remaining);
+        
+        // If scanner name was provided, set it
+        if (initialScannerName && !isOwner) {
+          await setScannerName(vehicleId, initialScannerName);
+          setHasIdentified(true);
+        }
       } catch (err) {
         console.error("Failed to init chat session:", err);
         setError("Failed to start chat. Please try again.");
@@ -56,7 +66,18 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose }: An
     };
     
     initSession();
-  }, [vehicleId]);
+  }, [vehicleId, initialScannerName, isOwner]);
+
+  const handleIdentify = async () => {
+    if (!scannerNameInput.trim()) return;
+    
+    try {
+      await setScannerName(vehicleId, scannerNameInput.trim());
+      setHasIdentified(true);
+    } catch (err) {
+      console.error("Failed to set scanner name:", err);
+    }
+  };
 
   // Subscribe to messages
   useEffect(() => {
@@ -111,20 +132,60 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose }: An
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full bg-white rounded-2xl border-2 border-ping-yellow/30 items-center justify-center p-8">
-        <div className="w-12 h-12 border-4 border-ping-yellow border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-ping-brown">Starting secure chat...</p>
+      <div className="flex flex-col h-full bg-card rounded-2xl border border-border items-center justify-center p-8">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-muted-foreground">Starting secure chat...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col h-full bg-white rounded-2xl border-2 border-red-200 items-center justify-center p-8">
-        <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-        <p className="text-red-600 text-center mb-4">{error}</p>
+      <div className="flex flex-col h-full bg-card rounded-2xl border border-destructive/20 items-center justify-center p-8">
+        <AlertCircle className="w-12 h-12 text-destructive mb-4" />
+        <p className="text-destructive text-center mb-4">{error}</p>
         <Button onClick={onClose} variant="outline">Go Back</Button>
       </div>
+    );
+  }
+
+  // Scanner identification screen
+  if (!hasIdentified && !isOwner) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col h-full bg-card rounded-2xl border border-border items-center justify-center p-8"
+      >
+        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+          <UserCircle className="w-8 h-8 text-primary" />
+        </div>
+        <h3 className="text-lg font-bold mb-2">Identify Yourself</h3>
+        <p className="text-muted-foreground text-center text-sm mb-6 max-w-[250px]">
+          Enter a nickname so the vehicle owner knows who they're chatting with. This helps build trust.
+        </p>
+        <div className="w-full max-w-[280px] space-y-3">
+          <Input
+            placeholder="e.g., Neighbor from Block A, Security Guard"
+            value={scannerNameInput}
+            onChange={(e) => setScannerNameInput(e.target.value)}
+            className="text-center"
+            onKeyPress={(e) => e.key === "Enter" && handleIdentify()}
+          />
+          <Button onClick={handleIdentify} className="w-full" disabled={!scannerNameInput.trim()}>
+            Start Chat
+          </Button>
+          <button
+            onClick={() => {
+              setScannerNameInput("Anonymous Person");
+              setHasIdentified(true);
+            }}
+            className="text-xs text-muted-foreground hover:text-foreground w-full text-center"
+          >
+            Continue as Anonymous
+          </button>
+        </div>
+      </motion.div>
     );
   }
 
@@ -132,47 +193,48 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose }: An
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col h-full bg-white rounded-2xl border-2 border-ping-yellow/30 overflow-hidden"
-      style={{ boxShadow: '0 20px 40px rgba(0, 0, 0, 0.08)' }}
+      className="flex flex-col h-full bg-card rounded-2xl border border-border overflow-hidden"
     >
       {/* Chat Header */}
-      <div className="bg-ping-yellow px-4 py-3 flex items-center justify-between">
+      <div className="bg-primary px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-ping-ink/10 rounded-full flex items-center justify-center">
-            <MessageCircle className="w-5 h-5 text-ping-ink" />
+          <div className="w-10 h-10 bg-primary-foreground/10 rounded-full flex items-center justify-center">
+            <MessageCircle className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h3 className="font-bold text-ping-ink">Anonymous Chat</h3>
-            <p className="text-xs text-ping-ink/70">Vehicle: {vehiclePlate}</p>
+            <h3 className="font-bold text-primary-foreground">
+              {isOwner ? (scannerNameInput || "Anonymous Chat") : "Chat with Owner"}
+            </h3>
+            <p className="text-xs text-primary-foreground/70">Vehicle: {vehiclePlate}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-ping-ink/10 px-2 py-1 rounded-full">
-            <Clock className="w-3 h-3 text-ping-ink" />
-            <span className="text-xs font-medium text-ping-ink">{timeRemaining}m</span>
+          <div className="flex items-center gap-1 bg-primary-foreground/10 px-2 py-1 rounded-full">
+            <Clock className="w-3 h-3 text-primary-foreground" />
+            <span className="text-xs font-medium text-primary-foreground">{timeRemaining}m</span>
           </div>
           {onClose && (
             <button
               onClick={handleEndChat}
-              className="p-2 hover:bg-ping-ink/10 rounded-full transition-colors"
+              className="p-2 hover:bg-primary-foreground/10 rounded-full transition-colors"
             >
-              <X className="w-5 h-5 text-ping-ink" />
+              <X className="w-5 h-5 text-primary-foreground" />
             </button>
           )}
         </div>
       </div>
 
       {/* Privacy Notice */}
-      <div className="bg-ping-cream/50 px-4 py-2 text-center">
-        <p className="text-xs text-ping-brown">
+      <div className="bg-muted px-4 py-2 text-center">
+        <p className="text-xs text-muted-foreground">
           🔒 Messages auto-delete after {timeRemaining} minutes. No data stored.
         </p>
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-ping-cream/30">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-secondary/30">
         {messages.length === 0 && (
-          <div className="text-center text-ping-brown/60 py-8">
+          <div className="text-center text-muted-foreground py-8">
             <MessageCircle className="w-12 h-12 mx-auto mb-2 opacity-30" />
             <p className="text-sm">No messages yet. Start the conversation!</p>
           </div>
@@ -190,14 +252,14 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose }: An
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                   message.sender === senderType
-                    ? "bg-ping-yellow text-ping-ink rounded-br-md"
-                    : "bg-white border border-ping-ink/10 text-ping-ink rounded-bl-md"
+                    ? "bg-primary text-primary-foreground rounded-br-md"
+                    : "bg-card border border-border rounded-bl-md"
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
                   <User className="w-3 h-3" />
                   <span className="text-xs font-medium opacity-70">
-                    {message.sender === "owner" ? "Vehicle Owner" : "Anonymous"}
+                    {message.sender === "owner" ? "Vehicle Owner" : (scannerNameInput || "Scanner")}
                   </span>
                 </div>
                 <p className="text-sm">{message.text}</p>
@@ -213,19 +275,18 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose }: An
       </div>
 
       {/* Message Input */}
-      <div className="p-4 bg-white border-t border-ping-ink/10">
+      <div className="p-4 bg-card border-t border-border">
         <div className="flex gap-2">
           <Input
             placeholder="Type a message..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="flex-1 border-2 border-ping-ink/20 focus:border-ping-yellow"
+            className="flex-1"
           />
           <Button
             onClick={handleSendMessage}
             disabled={!newMessage.trim()}
-            className="bg-ping-yellow text-ping-ink hover:bg-ping-yellow/90 px-4"
           >
             <Send className="w-5 h-5" />
           </Button>

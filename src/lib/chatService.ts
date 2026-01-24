@@ -44,9 +44,16 @@ export const getOrCreateChatSession = async (vehicleId: string): Promise<string>
     createdAt: now,
     expiresAt: now + CHAT_EXPIRY_MS,
     isActive: true,
+    scannerName: null, // Will be set when scanner identifies themselves
   });
   
   return sessionId;
+};
+
+// Set scanner name for identification
+export const setScannerName = async (vehicleId: string, name: string): Promise<void> => {
+  const vehicleChatsRef = ref(realtimeDb, `vehicleChats/${vehicleId}/scannerName`);
+  await set(vehicleChatsRef, name);
 };
 
 // Send a message

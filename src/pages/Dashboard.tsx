@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
-  QrCode,
   Plus,
   ShoppingCart,
   User,
@@ -11,12 +10,9 @@ import {
   Car,
   Bell,
   Settings,
-  AlertCircle,
   Loader2,
-  MessageCircle,
 } from "lucide-react";
-import VehicleQRCode from "@/components/qr/VehicleQRCode";
-import OwnerChatList from "@/components/chat/OwnerChatList";
+import VehicleCard from "@/components/vehicle/VehicleCard";
 import logo from "@/assets/ping-me-logo.png";
 import productCard from "@/assets/product-card.png";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,8 +30,8 @@ const Dashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+
   const [showAddVehicle, setShowAddVehicle] = useState(false);
-  const [showChats, setShowChats] = useState(false);
 
   // Add vehicle form state
   const [newPlate, setNewPlate] = useState("");
@@ -146,71 +142,28 @@ const Dashboard = () => {
         ) : (
           <div className="space-y-4 mb-6">
             {vehicles.map((vehicle, index) => (
-              <motion.div
+              <VehicleCard
                 key={vehicle.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-card rounded-2xl p-6 shadow-lg border border-border"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                      <Car className="w-6 h-6 text-primary-foreground" />
-                    </div>
-                    <div>
-                      <h2 className="font-bold text-lg">{vehicle.plateNumber}</h2>
-                      <p className="text-muted-foreground text-sm">
-                        {vehicle.color} {vehicle.model}
-                      </p>
-                    </div>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      vehicle.isActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {vehicle.isActive ? "Active" : "Inactive"}
-                  </span>
-                </div>
-
-                <div className="flex gap-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <QrCode className="w-4 h-4" />
-                        View QR
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>QR Code for {vehicle.plateNumber}</DialogTitle>
-                      </DialogHeader>
-                      <div className="py-4">
-                        <VehicleQRCode
-                          qrUuid={vehicle.qrUuid}
-                          plateNumber={vehicle.plateNumber}
-                          vehicleModel={`${vehicle.color || ""} ${vehicle.model}`}
-                        />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </motion.div>
+                vehicle={vehicle}
+                alerts={alerts}
+                index={index}
+              />
             ))}
           </div>
         )}
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="mb-8">
           <Dialog open={showAddVehicle} onOpenChange={setShowAddVehicle}>
             <DialogTrigger asChild>
-              <button className="bg-card p-4 rounded-2xl border border-border text-left hover:border-primary/50 hover:shadow-md transition-all">
-                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mb-3">
+              <button className="w-full bg-card p-4 rounded-2xl border border-border text-left hover:border-primary/50 hover:shadow-md transition-all flex items-center gap-4">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
                   <Plus className="w-6 h-6" />
                 </div>
-                <h3 className="font-semibold text-sm">Add Vehicle</h3>
-                <p className="text-muted-foreground text-xs">Register another vehicle</p>
+                <div>
+                  <h3 className="font-semibold">Add Vehicle</h3>
+                  <p className="text-muted-foreground text-sm">Register another vehicle to protect</p>
+                </div>
               </button>
             </DialogTrigger>
             <DialogContent>
@@ -284,24 +237,6 @@ const Dashboard = () => {
                   )}
                 </Button>
               </div>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={showChats} onOpenChange={setShowChats}>
-            <DialogTrigger asChild>
-              <button className="bg-card p-4 rounded-2xl border border-border text-left hover:border-primary/50 hover:shadow-md transition-all">
-                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mb-3">
-                  <MessageCircle className="w-6 h-6" />
-                </div>
-                <h3 className="font-semibold text-sm">Chats</h3>
-                <p className="text-muted-foreground text-xs">Reply to scanners</p>
-              </button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md p-0 overflow-hidden">
-              <OwnerChatList 
-                vehicles={vehicles.map(v => ({ id: v.id, plateNumber: v.plateNumber }))} 
-                onClose={() => setShowChats(false)}
-              />
             </DialogContent>
           </Dialog>
         </div>
