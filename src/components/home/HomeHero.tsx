@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import productImage from "@/assets/product-card.png";
+import heroPhoneImage from "@/assets/pingwebsite-2.png";
 
 const HomeHero = () => {
   const { userProfile } = useAuth();
@@ -51,11 +51,11 @@ const HomeHero = () => {
 
           {/* Hero Image */}
           <div className="flex items-center justify-center">
-            <div className="w-64 h-64 md:w-80 md:h-80">
+            <div className="w-64 md:w-80 lg:w-96">
               <img 
-                src={productImage} 
-                alt="PingMe QR Decal" 
-                className="w-full h-auto max-w-[500px] object-contain rounded-lg"
+                src={heroPhoneImage} 
+                alt="PingME App Interface" 
+                className="w-full h-auto object-contain drop-shadow-2xl"
               />
             </div>
           </div>
