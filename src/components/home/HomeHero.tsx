@@ -48,7 +48,7 @@ const HomeHero = () => {
 
           {/* Hero Image */}
           <div className="flex items-center justify-center">
-            <div className="w-64 md:w-80 lg:w-96 bg-cream rounded-3xl p-4">
+            <div className="w-48 md:w-65 lg:w-80 bg-cream rounded-3xl p-4">
               <img
                 src={heroPhoneImage}
                 alt="PingME App Interface"
