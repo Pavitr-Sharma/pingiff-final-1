@@ -312,9 +312,10 @@ const Dashboard = () => {
             transition={{ delay: 0.2 }}
             className="bg-card rounded-2xl overflow-hidden border border-border shadow-lg"
           >
-            <div className="aspect-[16/9] bg-primary/10 relative">
-              <img src={productCard} alt="PingME Card" className="w-[350px] h-[350px] object-contain" />
+            <div className="bg-primary/10 flex items-center justify-center py-6 md:py-8">
+              <img src={productCard} alt="PingME Card" className="w-[220px] md:w-[280px] lg:w-[320px] object-contain" />
             </div>
+
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
