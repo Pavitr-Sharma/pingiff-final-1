@@ -23,14 +23,10 @@ const HomeContact = () => {
     <section className="bg-background py-16">
       <div className="container">
         <h2 className="text-3xl md:text-4xl font-bold mb-6">REACH US OUT</h2>
-        
+
         <div className="flex flex-wrap justify-between gap-4 mb-8">
-          <p className="text-brown">
-            Address: WBI, 1st Floor, Shakarpur, New Delhi 110092
-          </p>
-          <p className="text-brown">
-            Call Us: +91 987654320
-          </p>
+          <p className="text-brown">Address: 745 Kesho Ram Complex Sector 45 Chandigarh</p>
+          <p className="text-brown">Call Us: +91 987654320</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6 max-w-3xl">
@@ -60,7 +56,7 @@ const HomeContact = () => {
             rows={4}
             required
           />
-          <Button 
+          <Button
             type="submit"
             className="self-center bg-[hsl(30,75%,26%)] hover:bg-[hsl(30,75%,20%)] text-white font-semibold px-8 py-3 rounded-lg btn-hover-lift"
           >
