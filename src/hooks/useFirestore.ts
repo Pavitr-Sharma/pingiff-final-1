@@ -126,7 +126,7 @@ export const useVehicleByQrUuid = (qrUuid: string | undefined) => {
   return { vehicle, loading, error };
 };
 
-// Hook to fetch alerts for a user's vehicles
+// Hook to fetch alerts for a user's vehicles (real-time)
 export const useAlerts = (vehicleIds: string[]) => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
