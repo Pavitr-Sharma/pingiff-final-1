@@ -13,12 +13,13 @@ import {
   Phone,
   Bell,
   Loader2,
+  CheckCircle,
   MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/ping-me-logo.png";
 import { useToast } from "@/hooks/use-toast";
-import { useVehicleByQrUuid, sendAlert } from "@/hooks/useFirestore";
+import { useVehicleByQrUuid, sendAlert, updateAlertStatus } from "@/hooks/useFirestore";
 import AnonymousChat from "@/components/chat/AnonymousChat";
 
 interface AlertButton {
@@ -42,7 +43,9 @@ const ScanView = () => {
   const { qrUuid } = useParams<{ qrUuid: string }>();
   const { toast } = useToast();
   const [loadingAlert, setLoadingAlert] = useState<string | null>(null);
-  const [alertsSent, setAlertsSent] = useState<string[]>([]);
+  const [alertsSent, setAlertsSent] = useState<Record<string, string>>({}); // alertId -> alertType mapping
+  const [resolvedAlerts, setResolvedAlerts] = useState<string[]>([]);
+  const [resolvingAlert, setResolvingAlert] = useState<string | null>(null);
   const [showChat, setShowChat] = useState(false);
   
   const { vehicle, loading, error } = useVehicleByQrUuid(qrUuid);
@@ -57,13 +60,13 @@ const ScanView = () => {
     return plate.slice(0, 4) + 'XXXX';
   };
 
-  const handleAlert = async (alertId: string, label: string) => {
+  const handleAlert = async (alertType: string, label: string) => {
     if (!vehicle) return;
     
-    setLoadingAlert(alertId);
+    setLoadingAlert(alertType);
     try {
-      await sendAlert(vehicle.id, alertId);
-      setAlertsSent([...alertsSent, alertId]);
+      const alertDocId = await sendAlert(vehicle.id, alertType);
+      setAlertsSent(prev => ({ ...prev, [alertType]: alertDocId }));
       toast({
         title: "Alert Sent!",
         description: `The owner has been notified: "${label}"`,
@@ -77,6 +80,30 @@ const ScanView = () => {
       });
     } finally {
       setLoadingAlert(null);
+    }
+  };
+
+  const handleResolveAlert = async (alertType: string) => {
+    const alertDocId = alertsSent[alertType];
+    if (!alertDocId) return;
+    
+    setResolvingAlert(alertType);
+    try {
+      await updateAlertStatus(alertDocId, "resolved");
+      setResolvedAlerts(prev => [...prev, alertType]);
+      toast({
+        title: "Alert Resolved!",
+        description: "The issue has been marked as resolved.",
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Failed to Resolve",
+        description: "Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setResolvingAlert(null);
     }
   };
 
@@ -193,23 +220,48 @@ const ScanView = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.05 }}
           >
-            <Button
-              variant="outline"
-              className={`w-full justify-start gap-4 py-4 h-auto border-2 border-ping-ink/10 hover:border-ping-yellow hover:bg-ping-yellow/10 text-left ${
-                alertsSent.includes(alert.id) ? 'opacity-60 bg-green-50 border-green-200' : ''
-              }`}
-              onClick={() => handleAlert(alert.id, alert.label)}
-              disabled={loadingAlert === alert.id || alertsSent.includes(alert.id)}
-            >
-              <span className="flex-shrink-0 text-ping-ink">{alert.icon}</span>
-              <span className="flex-1 text-ping-ink text-sm">{alert.label}</span>
-              {loadingAlert === alert.id && (
-                <Loader2 className="w-5 h-5 animate-spin text-ping-yellow" />
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="outline"
+                className={`w-full justify-start gap-4 py-4 h-auto border-2 border-ping-ink/10 hover:border-ping-yellow hover:bg-ping-yellow/10 text-left ${
+                  alertsSent[alert.id] ? 'opacity-60 bg-green-50 border-green-200' : ''
+                } ${resolvedAlerts.includes(alert.id) ? 'opacity-40 bg-gray-50 border-gray-200' : ''}`}
+                onClick={() => handleAlert(alert.id, alert.label)}
+                disabled={loadingAlert === alert.id || !!alertsSent[alert.id]}
+              >
+                <span className="flex-shrink-0 text-ping-ink">{alert.icon}</span>
+                <span className="flex-1 text-ping-ink text-sm">{alert.label}</span>
+                {loadingAlert === alert.id && (
+                  <Loader2 className="w-5 h-5 animate-spin text-ping-yellow" />
+                )}
+                {alertsSent[alert.id] && !resolvedAlerts.includes(alert.id) && (
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Sent</span>
+                )}
+                {resolvedAlerts.includes(alert.id) && (
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> Resolved
+                  </span>
+                )}
+              </Button>
+              
+              {/* Resolve button appears after alert is sent */}
+              {alertsSent[alert.id] && !resolvedAlerts.includes(alert.id) && (
+                <button
+                  onClick={() => handleResolveAlert(alert.id)}
+                  disabled={resolvingAlert === alert.id}
+                  className="ml-auto text-xs px-3 py-1.5 rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center gap-1"
+                >
+                  {resolvingAlert === alert.id ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <>
+                      <CheckCircle className="w-3 h-3" />
+                      Issue Resolved? Click here
+                    </>
+                  )}
+                </button>
               )}
-              {alertsSent.includes(alert.id) && (
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Sent</span>
-              )}
-            </Button>
+            </div>
           </motion.div>
         ))}
       </div>

@@ -11,12 +11,14 @@ import {
   ChevronDown,
   ChevronUp,
   AlertCircle,
+  CheckCircle,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import VehicleQRCode from "@/components/qr/VehicleQRCode";
 import AnonymousChat from "@/components/chat/AnonymousChat";
-import { Alert } from "@/hooks/useFirestore";
+import { Alert, updateAlertStatus } from "@/hooks/useFirestore";
 
 interface Vehicle {
   id: string;
@@ -55,9 +57,21 @@ const VehicleCard = ({ vehicle, alerts, index }: VehicleCardProps) => {
   const [expanded, setExpanded] = useState(false);
   const [activeChat, setActiveChat] = useState<ActiveChat | null>(null);
   const [showChat, setShowChat] = useState(false);
+  const [resolvingAlert, setResolvingAlert] = useState<string | null>(null);
   
   const vehicleAlerts = alerts.filter((a) => a.vehicleId === vehicle.id);
   const pendingAlerts = vehicleAlerts.filter((a) => a.status === "pending");
+
+  const handleResolveAlert = async (alertId: string) => {
+    setResolvingAlert(alertId);
+    try {
+      await updateAlertStatus(alertId, "resolved");
+    } catch (error) {
+      console.error("Failed to resolve alert:", error);
+    } finally {
+      setResolvingAlert(null);
+    }
+  };
 
   // Listen for active chats on this vehicle
   useEffect(() => {
@@ -240,29 +254,52 @@ const VehicleCard = ({ vehicle, alerts, index }: VehicleCardProps) => {
                       className={`p-3 rounded-xl border ${
                         alert.status === "pending"
                           ? "bg-destructive/5 border-destructive/20"
+                          : alert.status === "resolved"
+                          ? "bg-success/5 border-success/20"
                           : "bg-muted border-border"
                       }`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
-                          <AlertCircle
-                            className={`w-4 h-4 ${
-                              alert.status === "pending" ? "text-destructive" : "text-muted-foreground"
-                            }`}
-                          />
+                          {alert.status === "resolved" ? (
+                            <CheckCircle className="w-4 h-4 text-success" />
+                          ) : (
+                            <AlertCircle
+                              className={`w-4 h-4 ${
+                                alert.status === "pending" ? "text-destructive" : "text-muted-foreground"
+                              }`}
+                            />
+                          )}
                           <span className="text-sm font-medium">
                             {alertLabels[alert.alertType] || alert.alertType}
                           </span>
                         </div>
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded-full ${
-                            alert.status === "pending"
-                              ? "bg-destructive/10 text-destructive"
-                              : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          {alert.status}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {alert.status === "pending" && (
+                            <button
+                              onClick={() => handleResolveAlert(alert.id)}
+                              disabled={resolvingAlert === alert.id}
+                              className="text-xs px-2 py-1 rounded-full bg-success/10 text-success hover:bg-success/20 transition-colors disabled:opacity-50"
+                            >
+                              {resolvingAlert === alert.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                "Resolve"
+                              )}
+                            </button>
+                          )}
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full ${
+                              alert.status === "pending"
+                                ? "bg-destructive/10 text-destructive"
+                                : alert.status === "resolved"
+                                ? "bg-success/10 text-success"
+                                : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {alert.status}
+                          </span>
+                        </div>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         {alert.timestamp.toLocaleString()}
