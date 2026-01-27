@@ -33,9 +33,9 @@ const LandingHero = () => {
   }
 
   return (
-    <main className="h-[calc(100vh-80px)] bg-cream overflow-hidden">
+    <main className="h-[calc(100vh-80px)] bg-cream overflow-hidden flex">
       {/* <div className="container py-12 md:py-16 lg:py-20"> */}
-      <div className="container pt-6 md:pt-8 lg:pt-10 pb-8">
+      <div className="container flex pt-6 md:pt-8 lg:pt-10 pb-8">
         {/* <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center"> */}
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center h-full">
           {/* Left Column - Hero Content */}
