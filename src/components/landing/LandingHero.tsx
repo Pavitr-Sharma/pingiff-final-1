@@ -41,10 +41,6 @@ const LandingHero = () => {
           {/* Left Column - Hero Content */}
           <section className="order-2 lg:order-1 space-y-8">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/15 border border-primary/30">
-              <Shield className="w-4 h-4 text-primary" />
-              {/* <span className="text-sm font-semibold text-foreground">Privacy-First Vehicle Protection</span> */}
-            </div>
 
             {/* Headline */}
             <div className="space-y-4">
