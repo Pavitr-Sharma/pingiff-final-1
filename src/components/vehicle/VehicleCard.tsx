@@ -13,12 +13,25 @@ import {
   AlertCircle,
   CheckCircle,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import VehicleQRCode from "@/components/qr/VehicleQRCode";
 import AnonymousChat from "@/components/chat/AnonymousChat";
-import { Alert, updateAlertStatus } from "@/hooks/useFirestore";
+import { Alert, deleteVehicle, updateAlertStatus } from "@/hooks/useFirestore";
+import { useToast } from "@/hooks/use-toast";
 
 interface Vehicle {
   id: string;
@@ -58,6 +71,8 @@ const VehicleCard = ({ vehicle, alerts, index }: VehicleCardProps) => {
   const [activeChat, setActiveChat] = useState<ActiveChat | null>(null);
   const [showChat, setShowChat] = useState(false);
   const [resolvingAlert, setResolvingAlert] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const { toast } = useToast();
   
   const vehicleAlerts = alerts.filter((a) => a.vehicleId === vehicle.id);
   const pendingAlerts = vehicleAlerts.filter((a) => a.status === "pending");
@@ -71,6 +86,26 @@ const VehicleCard = ({ vehicle, alerts, index }: VehicleCardProps) => {
       console.error("Failed to resolve alert:", error);
     } finally {
       setResolvingAlert(null);
+    }
+  };
+
+  const handleDeleteVehicle = async () => {
+    setDeleting(true);
+    try {
+      await deleteVehicle(vehicle.id);
+      toast({
+        title: "Vehicle deleted",
+        description: "This vehicle has been removed from your account.",
+      });
+    } catch (error: any) {
+      console.error("Failed to delete vehicle:", error);
+      toast({
+        title: "Delete failed",
+        description: error?.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -155,6 +190,33 @@ const VehicleCard = ({ vehicle, alerts, index }: VehicleCardProps) => {
             >
               {vehicle.isActive ? "Active" : "Inactive"}
             </span>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" aria-label="Delete vehicle">
+                  {deleting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete {vehicle.plateNumber}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently remove the vehicle from your profile. This action can’t be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteVehicle} disabled={deleting}>
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">

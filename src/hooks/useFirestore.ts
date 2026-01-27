@@ -9,8 +9,7 @@ import {
   deleteDoc,
   doc, 
   serverTimestamp,
-  onSnapshot,
-  orderBy
+  onSnapshot
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { v4 as uuidv4 } from 'uuid';
@@ -48,17 +47,22 @@ export const useVehicles = (userId: string | undefined) => {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
+
     if (!userId) {
       setVehicles([]);
       setLoading(false);
       return;
     }
 
-    const q = query(
-      collection(db, 'vehicles'),
-      where('ownerId', '==', userId),
-      orderBy('createdAt', 'desc')
-    );
+    // NOTE:
+    // We intentionally avoid `orderBy('createdAt')` here.
+    // When `createdAt` is written as `serverTimestamp()`, the field may be
+    // temporarily unset until the server resolves it, which can cause the new
+    // vehicle to not appear immediately in some clients.
+    // We'll sort client-side instead for consistent real-time UX.
+    const q = query(collection(db, 'vehicles'), where('ownerId', '==', userId));
 
     const unsubscribe = onSnapshot(q, 
       (snapshot) => {
@@ -67,6 +71,9 @@ export const useVehicles = (userId: string | undefined) => {
           ...doc.data(),
           createdAt: doc.data().createdAt?.toDate() || new Date()
         })) as Vehicle[];
+
+        // Sort by createdAt descending (client-side)
+        vehicleList.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
         setVehicles(vehicleList);
         setLoading(false);
       },
