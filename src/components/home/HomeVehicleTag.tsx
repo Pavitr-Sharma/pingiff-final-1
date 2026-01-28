@@ -30,14 +30,14 @@ const HomeVehicleTag = () => {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Image */}
           <div className="flex flex-col items-center lg:items-start">
-            <img 
-              src={productImage} 
-              alt="PingME Vehicle Contact Tag" 
+            <img
+              src={productImage}
+              alt="PingME Vehicle Contact Tag"
               className="w-full max-w-sm lg:max-w-md object-contain rounded-lg"
             />
-            <p className="text-center lg:text-left mt-3 text-muted-foreground text-sm">
+            {/* <p className="text-center lg:text-left mt-3 text-muted-foreground text-sm">
               or call 7347340000
-            </p>
+            </p> */}
           </div>
 
           {/* Features */}
@@ -53,9 +53,7 @@ const HomeVehicleTag = () => {
                     <h3 className="text-base font-bold mb-0.5">
                       {index + 1}. {feature.title}
                     </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {feature.description}
-                    </p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
                   </div>
                 </div>
               ))}
