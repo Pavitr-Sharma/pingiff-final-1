@@ -3,7 +3,7 @@ import logo from "@/assets/ping-me-logo.png";
 
 const FooterNew = () => {
   return (
-    <footer className="bg-background border-t border-border-light py-6 mt-auto">
+    <footer className="bg-background border-t border-border-light py-3 mt-auto">
       <div className="container">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           {/* Brand */}
