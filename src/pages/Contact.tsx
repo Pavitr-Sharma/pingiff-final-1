@@ -3,6 +3,8 @@ import MainLayout from "@/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Phone, MapPin } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 const Contact = () => {
   const { toast } = useToast();
@@ -18,16 +20,33 @@ const Contact = () => {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Message Sent!",
-      description: "We'll get back to you within 24 hours.",
-    });
-    
-    setFormData({ name: "", email: "", phone: "", message: "" });
-    setLoading(false);
+    try {
+      // Save contact form data to Firebase Firestore
+      await addDoc(collection(db, "contacts"), {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        message: formData.message.trim(),
+        createdAt: serverTimestamp(),
+        status: "new"
+      });
+      
+      toast({
+        title: "Message Sent!",
+        description: "We'll get back to you within 24 hours.",
+      });
+      
+      setFormData({ name: "", email: "", phone: "", message: "" });
+    } catch (error) {
+      console.error("Error saving contact form:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
