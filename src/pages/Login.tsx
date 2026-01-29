@@ -27,7 +27,7 @@ const Login = () => {
   useEffect(() => {
     if (!authLoading && user && userProfile !== undefined) {
       const from = (location.state as any)?.from?.pathname || "/dashboard";
-      
+
       if (userProfile?.isOnboarded) {
         navigate(from, { replace: true });
       } else if (userProfile && !userProfile.isOnboarded) {
@@ -38,7 +38,7 @@ const Login = () => {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email.trim() || !password.trim()) {
       toast({
         title: "Error",
@@ -58,19 +58,19 @@ const Login = () => {
     } catch (error: any) {
       console.error("Email sign in error:", error);
       let errorMessage = "Could not sign in. Please try again.";
-      
-      if (error.code === 'auth/user-not-found') {
+
+      if (error.code === "auth/user-not-found") {
         errorMessage = "No account found with this email.";
-      } else if (error.code === 'auth/wrong-password') {
+      } else if (error.code === "auth/wrong-password") {
         errorMessage = "Incorrect password.";
-      } else if (error.code === 'auth/invalid-email') {
+      } else if (error.code === "auth/invalid-email") {
         errorMessage = "Invalid email address.";
-      } else if (error.code === 'auth/too-many-requests') {
+      } else if (error.code === "auth/too-many-requests") {
         errorMessage = "Too many failed attempts. Please try again later.";
-      } else if (error.code === 'auth/invalid-credential') {
+      } else if (error.code === "auth/invalid-credential") {
         errorMessage = "Invalid email or password.";
       }
-      
+
       toast({
         title: "Login Failed",
         description: errorMessage,
@@ -91,7 +91,7 @@ const Login = () => {
       });
     } catch (error: any) {
       console.error("Google sign in error:", error);
-      if (error.code !== 'auth/redirect-cancelled-by-user') {
+      if (error.code !== "auth/redirect-cancelled-by-user") {
         toast({
           title: "Login Failed",
           description: error.message || "Could not sign in with Google.",
@@ -214,11 +214,7 @@ const Login = () => {
                 className="w-full h-12"
                 disabled={loading || googleLoading || authLoading}
               >
-                {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  "Log In"
-                )}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Log In"}
               </Button>
             </form>
 
@@ -228,7 +224,7 @@ const Login = () => {
                 <div className="w-full border-t border-border"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-card text-muted-foreground">Or Continue With</span>
+                <span className="px-4 bg-card text-muted-foreground"> Continue With </span>
               </div>
             </div>
 
