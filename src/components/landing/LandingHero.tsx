@@ -47,7 +47,7 @@ const LandingHero = () => {
  tracking-tight text-foreground"
               >
                 Connect securely
-                <br className="block mt-2" />
+                <br className="block mt-1" />
                 with{" "}
                 <span className="relative inline-block">
                   <span className="relative z-10">PingMe</span>
