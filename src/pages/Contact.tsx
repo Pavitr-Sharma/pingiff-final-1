@@ -6,6 +6,21 @@ import { Mail, Phone, MapPin } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
+// Input validation constants
+const MAX_NAME_LENGTH = 100;
+const MAX_EMAIL_LENGTH = 255;
+const MAX_PHONE_LENGTH = 20;
+const MAX_MESSAGE_LENGTH = 1000;
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+// Simple text sanitizer to prevent XSS (removes script tags and HTML)
+const sanitizeText = (text: string): string => {
+  return text
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .trim();
+};
+
 const Contact = () => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
@@ -16,17 +31,72 @@ const Contact = () => {
   });
   const [loading, setLoading] = useState(false);
 
+  const validateForm = (): boolean => {
+    const trimmedName = formData.name.trim();
+    const trimmedEmail = formData.email.trim();
+    const trimmedPhone = formData.phone.trim();
+    const trimmedMessage = formData.message.trim();
+
+    // Name validation
+    if (!trimmedName || trimmedName.length > MAX_NAME_LENGTH) {
+      toast({
+        title: "Invalid Name",
+        description: `Name must be between 1 and ${MAX_NAME_LENGTH} characters.`,
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Email validation
+    if (!trimmedEmail || !EMAIL_REGEX.test(trimmedEmail) || trimmedEmail.length > MAX_EMAIL_LENGTH) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Phone validation (optional but if provided, must be valid)
+    if (trimmedPhone && (trimmedPhone.length > MAX_PHONE_LENGTH || !/^[+\d\s()-]*$/.test(trimmedPhone))) {
+      toast({
+        title: "Invalid Phone",
+        description: "Please enter a valid phone number.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Message validation
+    if (!trimmedMessage || trimmedMessage.length > MAX_MESSAGE_LENGTH) {
+      toast({
+        title: "Invalid Message",
+        description: `Message must be between 1 and ${MAX_MESSAGE_LENGTH} characters.`,
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate before submission
+    if (!validateForm()) {
+      return;
+    }
+    
     setLoading(true);
     
     try {
-      // Save contact form data to Firebase Firestore
+      // Sanitize and save contact form data to Firebase Firestore
       await addDoc(collection(db, "contacts"), {
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim(),
-        message: formData.message.trim(),
+        name: sanitizeText(formData.name).substring(0, MAX_NAME_LENGTH),
+        email: formData.email.trim().toLowerCase().substring(0, MAX_EMAIL_LENGTH),
+        phone: sanitizeText(formData.phone).substring(0, MAX_PHONE_LENGTH),
+        message: sanitizeText(formData.message).substring(0, MAX_MESSAGE_LENGTH),
         createdAt: serverTimestamp(),
         status: "new"
       });
