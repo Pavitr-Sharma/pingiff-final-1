@@ -33,18 +33,16 @@ const LandingHero = () => {
   }
 
   return (
-    <main className="h-[calc(100vh-80px)] bg-cream overflow-hidden flex">
-      {/* <div className="container py-12 md:py-16 lg:py-20"> */}
-      <div className="container flex pt-6 md:pt-8 lg:pt-10 pb-8">
-        {/* <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center"> */}
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center h-full">
-          {/* Left Column - Hero Content */}
-          <section className="order-2 lg:order-1 space-y-8">
+    <main className="min-h-[calc(100vh-80px)] bg-cream overflow-auto flex">
+      <div className="container flex py-6 md:py-8 lg:py-10">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-14 items-center w-full">
+          {/* Left Column - Hero Content - Shows FIRST on mobile */}
+          <section className="order-1 lg:order-1 space-y-4 lg:space-y-8">
             {/* Badge */}
 
             {/* Headline */}
-            <div className="space-y-4">
-              <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-extrabold leading-[1.1] tracking-tight text-foreground">
+            <div className="space-y-3 lg:space-y-4">
+              <h1 className="text-3xl md:text-4xl lg:text-[3.5rem] font-extrabold leading-[1.1] tracking-tight text-foreground">
                 Connect securely
                 <br />
                 with{" "}
@@ -53,14 +51,14 @@ const LandingHero = () => {
                   <span className="absolute bottom-1 left-0 w-full h-3 bg-primary/40 -z-0 rounded-sm"></span>
                 </span>
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-lg">
+              <p className="text-base md:text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-lg">
                 Privacy-first contact sharing for modern professionals. No phone numbers exposed, just secure
                 connections.
               </p>
             </div>
 
-            {/* Trust Indicators */}
-            <div className="flex flex-wrap gap-4">
+            {/* Trust Indicators - Hidden on mobile for compact view */}
+            <div className="hidden md:flex flex-wrap gap-4">
               {trustIndicators.map((item, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
@@ -71,8 +69,8 @@ const LandingHero = () => {
               ))}
             </div>
 
-            {/* Benefits Grid */}
-            <div className="grid sm:grid-cols-3 gap-4 pt-2">
+            {/* Benefits Grid - Hidden on mobile for compact view */}
+            <div className="hidden md:grid sm:grid-cols-3 gap-4 pt-2">
               {benefits.map((benefit, index) => {
                 const Icon = benefit.icon;
                 return (
@@ -91,9 +89,9 @@ const LandingHero = () => {
             </div>
           </section>
 
-          {/* Right Column - Registration Card */}
-          <section className="order-1 lg:order-2">
-            <div className="relative bg-background rounded-3xl p-8 md:p-10 shadow-xl border-2 border-primary/20 overflow-hidden">
+          {/* Right Column - Registration Card - Shows SECOND on mobile */}
+          <section className="order-2 lg:order-2">
+            <div className="relative bg-background rounded-2xl lg:rounded-3xl p-6 md:p-8 lg:p-10 shadow-xl border-2 border-primary/20 overflow-hidden">
               {/* Decorative gradient */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
               <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
