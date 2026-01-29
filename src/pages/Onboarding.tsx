@@ -212,6 +212,15 @@ const Onboarding = () => {
                     Continue
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
+
+                  <Button 
+                    variant="ghost" 
+                    className="w-full" 
+                    onClick={() => navigate("/login")}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Go Back
+                  </Button>
                 </div>
               </>
             )}
