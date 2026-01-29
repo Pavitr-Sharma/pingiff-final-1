@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/ping-me-logo.png";
 import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
@@ -37,27 +36,6 @@ const Login = () => {
     }
   }, [user, userProfile, authLoading, navigate, location]);
 
-  const checkEmailVerified = async (emailToCheck: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase
-        .from("email_otps")
-        .select("verified")
-        .eq("email", emailToCheck.toLowerCase())
-        .eq("verified", true)
-        .maybeSingle();
-
-      if (error) {
-        console.error("Error checking email verification:", error);
-        return false;
-      }
-
-      return data?.verified === true;
-    } catch (error) {
-      console.error("Error checking email verification:", error);
-      return false;
-    }
-  };
-
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -72,19 +50,6 @@ const Login = () => {
 
     setLoading(true);
     try {
-      // Check if email was verified via OTP
-      const isVerified = await checkEmailVerified(email.trim());
-      
-      if (!isVerified) {
-        toast({
-          title: "Email Not Verified",
-          description: "Please register and verify your email with OTP before logging in.",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-
       await signInWithEmail(email.trim(), password);
       toast({
         title: "Welcome back!",
