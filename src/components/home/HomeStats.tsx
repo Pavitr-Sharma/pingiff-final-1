@@ -1,8 +1,8 @@
 const stats = [
-  { icon: "👥", value: "1000+", label: "Happy Customers" },
-  { icon: "🏍️", value: "2000+", label: "Vehicles Protected" },
-  { icon: "⭐", value: "4.2", label: "Google Rating" },
-  { icon: "🏢", value: "5+", label: "Cities Covered" },
+  { icon: "👥", value: "500+", label: "Happy Customers" },
+  { icon: "🏍️", value: "1000+", label: "Vehicles Protected" },
+  { icon: "⭐", value: "4.0", label: "Google Rating" },
+  { icon: "🏢", value: "5+", label: "Region Covered" },
 ];
 
 const HomeStats = () => {
