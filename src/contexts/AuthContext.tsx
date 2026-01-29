@@ -5,7 +5,11 @@ import {
   signInWithRedirect,
   getRedirectResult,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateProfile
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '@/lib/firebase';
@@ -16,6 +20,9 @@ export interface UserProfile {
   age?: number;
   email: string | null;
   phoneNumber: string | null;
+  address?: string;
+  country?: string;
+  state?: string;
   createdAt: Date;
   isOnboarded: boolean;
 }
@@ -25,6 +32,9 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, fullName: string, extraData?: Partial<UserProfile>) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (data: Partial<UserProfile>) => Promise<void>;
   refreshUserProfile: () => Promise<void>;
@@ -58,6 +68,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             age: data.age || undefined,
             email: data.email || null,
             phoneNumber: data.phoneNumber || data.phone || null,
+            address: data.address || undefined,
+            country: data.country || undefined,
+            state: data.state || undefined,
             createdAt: data.createdAt?.toDate() || new Date(),
             isOnboarded: data.isOnboarded || false
           };
@@ -83,16 +96,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user, fetchUserProfile]);
 
   // Create user document if it doesn't exist
-  const ensureUserDocument = async (firebaseUser: User): Promise<UserProfile | null> => {
+  const ensureUserDocument = async (firebaseUser: User, extraData?: Partial<UserProfile>): Promise<UserProfile | null> => {
     try {
       const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
       
       if (!userDoc.exists()) {
         // Create new user document
         const newUserData = {
-          fullName: firebaseUser.displayName || '',
+          fullName: extraData?.fullName || firebaseUser.displayName || '',
           email: firebaseUser.email || null,
-          phoneNumber: firebaseUser.phoneNumber || null,
+          phoneNumber: extraData?.phoneNumber || firebaseUser.phoneNumber || null,
+          address: extraData?.address || null,
+          country: extraData?.country || null,
+          state: extraData?.state || null,
           createdAt: serverTimestamp(),
           isOnboarded: false
         };
@@ -101,9 +117,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         return {
           uid: firebaseUser.uid,
-          fullName: firebaseUser.displayName || '',
+          fullName: extraData?.fullName || firebaseUser.displayName || '',
           email: firebaseUser.email || null,
-          phoneNumber: firebaseUser.phoneNumber || null,
+          phoneNumber: extraData?.phoneNumber || firebaseUser.phoneNumber || null,
+          address: extraData?.address,
+          country: extraData?.country,
+          state: extraData?.state,
           createdAt: new Date(),
           isOnboarded: false
         };
@@ -172,6 +191,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Email/Password Sign In
+  const signInWithEmail = async (email: string, password: string) => {
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const profile = await fetchUserProfile(result.user.uid);
+      setUserProfile(profile);
+    } catch (error: any) {
+      console.error('Email sign in error:', error);
+      throw error;
+    }
+  };
+
+  // Email/Password Sign Up
+  const signUpWithEmail = async (email: string, password: string, fullName: string, extraData?: Partial<UserProfile>) => {
+    try {
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Update display name
+      await updateProfile(result.user, { displayName: fullName });
+      
+      // Create user profile in Firestore
+      const profile = await ensureUserDocument(result.user, { fullName, ...extraData });
+      setUserProfile(profile);
+    } catch (error: any) {
+      console.error('Email sign up error:', error);
+      throw error;
+    }
+  };
+
+  // Password Reset
+  const resetPassword = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      throw error;
+    }
+  };
+
   // Logout
   const logout = async () => {
     try {
@@ -219,6 +277,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       userProfile,
       loading,
       signInWithGoogle,
+      signInWithEmail,
+      signUpWithEmail,
+      resetPassword,
       logout,
       updateUserProfile,
       refreshUserProfile
