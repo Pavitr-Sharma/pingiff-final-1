@@ -42,18 +42,18 @@ const LandingHero = () => {
 
             {/* Headline */}
             <div className="space-y-3 lg:space-y-4">
-              <h1
-                className="text-3xl md:text-4xl lg:text-[3.5rem] font-extrabold leading-tight md:leading-[1.13] lg:leading-[1.2]
- tracking-tight text-foreground"
-              >
+              <h1 className="text-3xl md:text-4xl lg:text-[3.5rem] font-extrabold leading-[1.15] tracking-tight text-foreground">
                 Connect securely
-                <br className="block mt-1" />
-                with{" "}
-                <span className="relative inline-block">
-                  <span className="relative z-10">PingMe</span>
-                  <span className="absolute -bottom-1 left-0 w-full h-3 bg-primary/40 -z-0 rounded-sm"></span>
+                <br className="leading-none" />
+                <span className="text-2xl md:text-3xl lg:text-[3rem] font-extrabold">
+                  with{" "}
+                  <span className="relative inline-block">
+                    <span className="relative z-10">PingMe</span>
+                    <span className="absolute -bottom-1 left-0 w-full h-2 bg-primary/40 -z-0 rounded-sm"></span>
+                  </span>
                 </span>
               </h1>
+
               <p className="text-base md:text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-lg">
                 Privacy-first contact sharing for modern professionals. No phone numbers exposed, just secure
                 connections.
