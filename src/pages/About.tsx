@@ -56,7 +56,7 @@ const About = () => {
                 <div>
                   <h3 className="font-bold text-lg mb-2">Community Driven</h3>
                   <p className="text-muted-foreground">
-                    Built with feedback from thousands of vehicle owners across 100+ cities in India.
+                    Built with feedback from thousands of vehicle owners across 5+ cities in India.
                   </p>
                 </div>
               </div>
@@ -82,7 +82,7 @@ const About = () => {
                   <div className="text-sm text-foreground/80">Happy Customers</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-foreground"<1000+</div>
+                  <div className="text-3xl font-bold text-foreground">1000+</div>
                   <div className="text-sm text-foreground/80">Vehicles Protected</div>
                 </div>
                 <div>
