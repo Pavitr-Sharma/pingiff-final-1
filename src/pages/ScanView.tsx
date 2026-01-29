@@ -1,20 +1,20 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
-  Car, 
-  Ban, 
-  HelpCircle, 
-  AlertTriangle, 
-  Unlock, 
-  Truck, 
-  Flame, 
+import {
+  Car,
+  Ban,
+  HelpCircle,
+  AlertTriangle,
+  Unlock,
+  Truck,
+  Flame,
   AlertCircle,
   Phone,
   Bell,
   Loader2,
   CheckCircle,
-  MessageCircle
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/ping-me-logo.png";
@@ -45,26 +45,26 @@ const ScanView = () => {
   const [loadingAlert, setLoadingAlert] = useState<string | null>(null);
   const [alertsSent, setAlertsSent] = useState<string[]>([]);
   const [showChat, setShowChat] = useState(false);
-  
+
   const { vehicle, loading, error } = useVehicleByQrUuid(qrUuid);
 
   // Mask plate number for privacy (show only first and last parts)
   const maskPlateNumber = (plate: string) => {
     if (plate.length <= 6) return plate;
-    const parts = plate.split(' ');
+    const parts = plate.split(" ");
     if (parts.length >= 2) {
       return `${parts[0]} ${parts[1]?.slice(0, 2)}XXXX`;
     }
-    return plate.slice(0, 4) + 'XXXX';
+    return plate.slice(0, 4) + "XXXX";
   };
 
   const handleAlert = async (alertType: string, label: string) => {
     if (!vehicle) return;
-    
+
     setLoadingAlert(alertType);
     try {
       await sendAlert(vehicle.id, alertType);
-      setAlertsSent(prev => [...prev, alertType]);
+      setAlertsSent((prev) => [...prev, alertType]);
       toast({
         title: "Alert Sent!",
         description: `The owner has been notified: "${label}"`,
@@ -74,7 +74,7 @@ const ScanView = () => {
       toast({
         title: "Failed to Send Alert",
         description: "Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoadingAlert(null);
@@ -115,13 +115,9 @@ const ScanView = () => {
               <AlertTriangle className="w-10 h-10 text-red-500" />
             </div>
             <h1 className="text-2xl font-bold mb-2 text-ping-ink">Vehicle Not Found</h1>
-            <p className="text-ping-brown mb-6">
-              This QR code is invalid or the vehicle is no longer registered.
-            </p>
+            <p className="text-ping-brown mb-6">This QR code is invalid or the vehicle is no longer registered.</p>
             <Link to="/">
-              <Button className="bg-ping-yellow text-ping-ink hover:bg-ping-yellow/90">
-                Go to Homepage
-              </Button>
+              <Button className="bg-ping-yellow text-ping-ink hover:bg-ping-yellow/90">Go to Homepage</Button>
             </Link>
           </div>
         </div>
@@ -135,7 +131,7 @@ const ScanView = () => {
       <div className="min-h-screen bg-ping-cream flex flex-col">
         <header className="bg-ping-yellow py-3 px-4 flex items-center justify-between shadow-md">
           <img src={logo} alt="PingME" className="h-9" />
-          <button 
+          <button
             onClick={() => setShowChat(false)}
             className="px-4 py-2 bg-ping-ink/10 rounded-full text-sm font-medium text-ping-ink hover:bg-ping-ink/20 transition-colors"
           >
@@ -143,7 +139,7 @@ const ScanView = () => {
           </button>
         </header>
         <div className="flex-1 p-4">
-          <AnonymousChat 
+          <AnonymousChat
             vehicleId={vehicle.id}
             vehiclePlate={maskPlateNumber(vehicle.plateNumber)}
             isOwner={false}
@@ -165,11 +161,7 @@ const ScanView = () => {
       </header>
 
       {/* Vehicle Info Card */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="px-4 pt-6 pb-4"
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="px-4 pt-6 pb-4">
         <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-ping-yellow/30">
           <p className="text-sm text-ping-brown text-center uppercase tracking-wider">
             {vehicle.color} {vehicle.type} - {vehicle.model}
@@ -197,16 +189,14 @@ const ScanView = () => {
             <Button
               variant="outline"
               className={`w-full justify-start gap-4 py-4 h-auto border-2 border-ping-ink/10 hover:border-ping-yellow hover:bg-ping-yellow/10 text-left ${
-                alertsSent.includes(alert.id) ? 'opacity-60 bg-green-50 border-green-200' : ''
+                alertsSent.includes(alert.id) ? "opacity-60 bg-green-50 border-green-200" : ""
               }`}
               onClick={() => handleAlert(alert.id, alert.label)}
               disabled={loadingAlert === alert.id || alertsSent.includes(alert.id)}
             >
               <span className="flex-shrink-0 text-ping-ink">{alert.icon}</span>
               <span className="flex-1 text-ping-ink text-sm">{alert.label}</span>
-              {loadingAlert === alert.id && (
-                <Loader2 className="w-5 h-5 animate-spin text-ping-yellow" />
-              )}
+              {loadingAlert === alert.id && <Loader2 className="w-5 h-5 animate-spin text-ping-yellow" />}
               {alertsSent.includes(alert.id) && (
                 <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full flex items-center gap-1">
                   <CheckCircle className="w-3 h-3" /> Sent
@@ -218,7 +208,7 @@ const ScanView = () => {
       </div>
 
       {/* Bottom Actions */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
@@ -234,20 +224,16 @@ const ScanView = () => {
         </button>
 
         {/* Call Owner */}
-        <button
+        {/* <button
           onClick={handleCall}
           className="w-full py-4 bg-green-500 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all duration-200 hover:brightness-110 active:scale-[0.98] shadow-lg"
         >
           <Phone className="w-5 h-5" />
           CALL OWNER
-        </button>
-        
-        <p className="text-center text-xs text-ping-brown">
-          Privacy-protected contact. No credentials shared.
-        </p>
-        <p className="text-center text-xs text-ping-brown/70">
-          © 2026 PingME™
-        </p>
+        </button> */}
+
+        <p className="text-center text-xs text-ping-brown">Privacy-protected contact. No credentials shared.</p>
+        <p className="text-center text-xs text-ping-brown/70">© 2026 PingME™</p>
       </motion.div>
     </div>
   );
