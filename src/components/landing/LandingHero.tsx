@@ -44,7 +44,7 @@ const LandingHero = () => {
             <div className="space-y-3 lg:space-y-4">
               <h1 className="text-3xl md:text-4xl lg:text-[3.5rem] font-extrabold leading-[1.2] tracking-tight text-foreground">
                 Connect securely
-                <span className="block mt-1">
+                <span className="block mt-2">
                   <span className="text-[0.95em]">
                     with{" "}
                     <span className="relative inline-block">
