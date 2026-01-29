@@ -251,14 +251,48 @@ export const deleteVehicle = async (vehicleId: string) => {
   await deleteDoc(doc(db, 'vehicles', vehicleId));
 };
 
-// Send an alert (from public scan view)
+// Alert validation constants
+const MAX_ALERT_TYPE_LENGTH = 100;
+const VALID_ALERT_TYPES = ['headlights_on', 'blocking_way', 'parking_issue', 'door_open', 'other'];
+
+// Simple text sanitizer
+const sanitizeAlertText = (text: string): string => {
+  return text
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .trim();
+};
+
+// Send an alert (from public scan view) with validation
 export const sendAlert = async (
   vehicleId: string,
   alertType: string
 ): Promise<string> => {
+  // Validate vehicleId
+  if (!vehicleId || typeof vehicleId !== 'string' || vehicleId.length > 50) {
+    throw new Error('Invalid vehicle ID');
+  }
+
+  // Validate and sanitize alertType
+  if (!alertType || typeof alertType !== 'string') {
+    throw new Error('Alert type is required');
+  }
+
+  const sanitizedAlertType = sanitizeAlertText(alertType).substring(0, MAX_ALERT_TYPE_LENGTH);
+  
+  if (!sanitizedAlertType) {
+    throw new Error('Invalid alert type');
+  }
+
+  // Optional: Validate against known alert types (if you have predefined types)
+  // Uncomment the following if you want strict validation:
+  // if (!VALID_ALERT_TYPES.includes(sanitizedAlertType.toLowerCase())) {
+  //   throw new Error('Unknown alert type');
+  // }
+
   const docRef = await addDoc(collection(db, 'alerts'), {
-    vehicleId,
-    alertType,
+    vehicleId: vehicleId.trim(),
+    alertType: sanitizedAlertType,
     timestamp: serverTimestamp(),
     status: 'pending'
   });

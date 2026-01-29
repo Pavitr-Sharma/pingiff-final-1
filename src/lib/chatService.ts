@@ -56,15 +56,52 @@ export const setScannerName = async (vehicleId: string, name: string): Promise<v
   await set(vehicleChatsRef, name);
 };
 
-// Send a message
+// Message validation constants
+const MAX_MESSAGE_LENGTH = 500;
+const MAX_SESSION_ID_LENGTH = 100;
+
+// Simple text sanitizer for messages
+const sanitizeMessage = (text: string): string => {
+  return text
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .trim();
+};
+
+// Send a message with validation
 export const sendMessage = async (
   sessionId: string,
   text: string,
   sender: "scanner" | "owner"
 ): Promise<void> => {
+  // Validate sessionId
+  if (!sessionId || typeof sessionId !== 'string' || sessionId.length > MAX_SESSION_ID_LENGTH) {
+    throw new Error('Invalid session ID');
+  }
+
+  // Validate sender
+  if (sender !== 'scanner' && sender !== 'owner') {
+    throw new Error('Invalid sender type');
+  }
+
+  // Validate and sanitize message text
+  if (!text || typeof text !== 'string') {
+    throw new Error('Message text is required');
+  }
+
+  const sanitizedText = sanitizeMessage(text);
+  
+  if (!sanitizedText) {
+    throw new Error('Message cannot be empty');
+  }
+
+  if (sanitizedText.length > MAX_MESSAGE_LENGTH) {
+    throw new Error(`Message too long. Maximum ${MAX_MESSAGE_LENGTH} characters allowed.`);
+  }
+
   const messagesRef = ref(realtimeDb, `chats/${sessionId}/messages`);
   await push(messagesRef, {
-    text,
+    text: sanitizedText,
     sender,
     timestamp: Date.now(),
   });
