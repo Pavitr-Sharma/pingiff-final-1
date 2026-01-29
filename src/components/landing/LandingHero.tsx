@@ -47,7 +47,7 @@ const LandingHero = () => {
                 <br />
                 with{" "}
                 <span className="relative inline-block">
-                  <span className="relative z-10">PingMe</span>
+                  <span className="relative z-12">PingMe</span>
                   <span className="absolute bottom-1 left-0 w-full h-3 bg-primary/40 -z-0 rounded-sm"></span>
                 </span>
               </h1>
