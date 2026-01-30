@@ -107,14 +107,6 @@ const Dashboard = () => {
             <Link to="/contact" className="text-muted-foreground font-medium hover:text-foreground transition-colors">
               Contact Us
             </Link>
-            {showLogout && (
-              <button
-                onClick={logout}
-                className="px-5 py-2.5 rounded-full border-2 border-foreground text-foreground font-semibold text-sm transition-all hover:bg-foreground hover:text-background"
-              >
-                Logout
-              </button>
-            )}
           </nav>
           <div className="flex items-center gap-2">
             {/* Notifications Sheet */}
