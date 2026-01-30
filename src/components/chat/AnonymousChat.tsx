@@ -21,7 +21,13 @@ interface AnonymousChatProps {
   scannerName?: string; // Pre-set scanner name
 }
 
-const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose, scannerName: initialScannerName }: AnonymousChatProps) => {
+const AnonymousChat = ({
+  vehicleId,
+  vehiclePlate,
+  isOwner = false,
+  onClose,
+  scannerName: initialScannerName,
+}: AnonymousChatProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -33,9 +39,9 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose, scan
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const senderType = isOwner ? "owner" : "scanner";
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  // const scrollToBottom = () => {
+  //   messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // };
 
   useEffect(() => {
     scrollToBottom();
@@ -48,10 +54,10 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose, scan
         setIsLoading(true);
         const id = await getOrCreateChatSession(vehicleId);
         setSessionId(id);
-        
+
         const remaining = await getSessionTimeRemaining(vehicleId);
         setTimeRemaining(remaining);
-        
+
         // If scanner name was provided, set it
         if (initialScannerName && !isOwner) {
           await setScannerName(vehicleId, initialScannerName);
@@ -64,13 +70,13 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose, scan
         setIsLoading(false);
       }
     };
-    
+
     initSession();
   }, [vehicleId, initialScannerName, isOwner]);
 
   const handleIdentify = async () => {
     if (!scannerNameInput.trim()) return;
-    
+
     try {
       await setScannerName(vehicleId, scannerNameInput.trim());
       setHasIdentified(true);
@@ -82,11 +88,11 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose, scan
   // Subscribe to messages
   useEffect(() => {
     if (!sessionId) return;
-    
+
     const unsubscribe = subscribeToMessages(sessionId, (msgs) => {
       setMessages(msgs);
     });
-    
+
     return () => unsubscribe();
   }, [sessionId]);
 
@@ -95,13 +101,13 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose, scan
     const interval = setInterval(async () => {
       const remaining = await getSessionTimeRemaining(vehicleId);
       setTimeRemaining(remaining);
-      
+
       // Auto-end if expired
       if (remaining <= 0 && sessionId) {
         await handleEndChat();
       }
     }, 60000);
-    
+
     return () => clearInterval(interval);
   }, [vehicleId, sessionId]);
 
@@ -144,7 +150,9 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose, scan
       <div className="flex flex-col h-full bg-card rounded-2xl border border-destructive/20 items-center justify-center p-8">
         <AlertCircle className="w-12 h-12 text-destructive mb-4" />
         <p className="text-destructive text-center mb-4">{error}</p>
-        <Button onClick={onClose} variant="outline">Go Back</Button>
+        <Button onClick={onClose} variant="outline">
+          Go Back
+        </Button>
       </div>
     );
   }
@@ -203,7 +211,7 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose, scan
           </div>
           <div>
             <h3 className="font-bold text-primary-foreground">
-              {isOwner ? (scannerNameInput || "Anonymous Chat") : "Chat with Owner"}
+              {isOwner ? scannerNameInput || "Anonymous Chat" : "Chat with Owner"}
             </h3>
             <p className="text-xs text-primary-foreground/70">Vehicle: {vehiclePlate}</p>
           </div>
@@ -239,7 +247,7 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose, scan
             <p className="text-sm">No messages yet. Start the conversation!</p>
           </div>
         )}
-        
+
         <AnimatePresence initial={false}>
           {messages.map((message) => (
             <motion.div
@@ -259,7 +267,7 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose, scan
                 <div className="flex items-center gap-2 mb-1">
                   <User className="w-3 h-3" />
                   <span className="text-xs font-medium opacity-70">
-                    {message.sender === "owner" ? "Vehicle Owner" : (scannerNameInput || "Scanner")}
+                    {message.sender === "owner" ? "Vehicle Owner" : scannerNameInput || "Scanner"}
                   </span>
                 </div>
                 <p className="text-sm">{message.text}</p>
@@ -271,7 +279,7 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose, scan
           ))}
         </AnimatePresence>
 
-        <div ref={messagesEndRef} />
+        {/* <div ref={messagesEndRef} /> */}
       </div>
 
       {/* Message Input */}
@@ -284,10 +292,7 @@ const AnonymousChat = ({ vehicleId, vehiclePlate, isOwner = false, onClose, scan
             onKeyPress={handleKeyPress}
             className="flex-1"
           />
-          <Button
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim()}
-          >
+          <Button onClick={handleSendMessage} disabled={!newMessage.trim()}>
             <Send className="w-5 h-5" />
           </Button>
         </div>
