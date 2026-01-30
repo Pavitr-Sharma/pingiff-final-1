@@ -279,7 +279,7 @@ const AnonymousChat = ({
           ))}
         </AnimatePresence>
 
-        <div ref={messagesEndRef} />
+        {/* <div ref={messagesEndRef} /> */}
       </div>
 
       {/* Message Input */}
