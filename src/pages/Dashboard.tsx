@@ -2,17 +2,7 @@ import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import {
-  Plus,
-  ShoppingCart,
-  User,
-  LogOut,
-  Car,
-  Bell,
-  Settings,
-  Loader2,
-  X,
-} from "lucide-react";
+import { Plus, ShoppingCart, User, LogOut, Car, Bell, Settings, Loader2, X } from "lucide-react";
 import VehicleCard from "@/components/vehicle/VehicleCard";
 import logo from "@/assets/ping-me-logo.png";
 import productCard from "@/assets/product-card.png";
@@ -31,7 +21,6 @@ const Dashboard = () => {
   const { alerts } = useAlerts(vehicleIds);
   const { toast } = useToast();
   const navigate = useNavigate();
-
 
   const [showAddVehicle, setShowAddVehicle] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -103,7 +92,7 @@ const Dashboard = () => {
           <Link to="/">
             <img src={logo} alt="PingME" className="h-10" />
           </Link>
-          
+
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6">
             <Link to="/" className="text-muted-foreground font-medium hover:text-foreground transition-colors">
@@ -118,12 +107,14 @@ const Dashboard = () => {
             <Link to="/contact" className="text-muted-foreground font-medium hover:text-foreground transition-colors">
               Contact Us
             </Link>
-            <Link
-              to="/dashboard"
-              className="px-5 py-2.5 rounded-full border-2 border-foreground text-foreground font-semibold text-sm transition-all hover:bg-foreground hover:text-background"
-            >
-              Dashboard
-            </Link>
+            {showLogout && (
+              <button
+                onClick={logout}
+                className="px-5 py-2.5 rounded-full border-2 border-foreground text-foreground font-semibold text-sm transition-all hover:bg-foreground hover:text-background"
+              >
+                Logout
+              </button>
+            )}
           </nav>
           <div className="flex items-center gap-2">
             {/* Notifications Sheet */}
@@ -150,7 +141,7 @@ const Dashboard = () => {
                     </div>
                   ) : (
                     pendingAlerts.map((alert) => {
-                      const vehicle = vehicles.find(v => v.id === alert.vehicleId);
+                      const vehicle = vehicles.find((v) => v.id === alert.vehicleId);
                       return (
                         <div key={alert.id} className="p-3 rounded-xl border bg-destructive/5 border-destructive/20">
                           <div className="flex items-center gap-2 mb-1">
@@ -158,9 +149,7 @@ const Dashboard = () => {
                             <span className="font-medium text-sm">{vehicle?.plateNumber || "Unknown"}</span>
                           </div>
                           <p className="text-sm text-muted-foreground">{alert.alertType}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {alert.timestamp.toLocaleString()}
-                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">{alert.timestamp.toLocaleString()}</p>
                         </div>
                       );
                     })
@@ -187,7 +176,9 @@ const Dashboard = () => {
                   </div>
                   <div className="p-4 rounded-xl border border-border">
                     <h3 className="font-medium mb-2">Vehicles</h3>
-                    <p className="text-sm text-muted-foreground">{vehicles.length} registered vehicle{vehicles.length !== 1 ? 's' : ''}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {vehicles.length} registered vehicle{vehicles.length !== 1 ? "s" : ""}
+                    </p>
                   </div>
                   <Button
                     variant="outline"
@@ -237,12 +228,7 @@ const Dashboard = () => {
         ) : (
           <div className="space-y-4 mb-6">
             {vehicles.map((vehicle, index) => (
-              <VehicleCard
-                key={vehicle.id}
-                vehicle={vehicle}
-                alerts={alerts}
-                index={index}
-              />
+              <VehicleCard key={vehicle.id} vehicle={vehicle} alerts={alerts} index={index} />
             ))}
           </div>
         )}
