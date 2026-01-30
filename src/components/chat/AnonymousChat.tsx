@@ -43,9 +43,9 @@ const AnonymousChat = ({
   //   messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   // };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // useEffect(() => {
+  //   scrollToBottom();
+  // }, [messages]);
 
   // Initialize chat session
   useEffect(() => {
@@ -279,7 +279,7 @@ const AnonymousChat = ({
           ))}
         </AnimatePresence>
 
-        {/* <div ref={messagesEndRef} /> */}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Message Input */}
