@@ -2,8 +2,10 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import heroPhoneImage from "@/assets/pingwebsite-2.png";
+import { useToast } from "@/hooks/use-toast";
 
 const HomeHero = () => {
+  const { toast } = useToast();
   const { userProfile } = useAuth();
 
   return (
@@ -40,6 +42,12 @@ const HomeHero = () => {
               <Button
                 variant="outline"
                 className="border-2 border-[hsl(30,75%,26%)] text-[hsl(30,75%,26%)] hover:bg-[hsl(30,75%,26%)] hover:text-white font-semibold px-6 py-3 rounded-lg btn-hover-lift"
+                onClick={() => {
+                  toast({
+                    title: "Live Ping Preview",
+                    description: "This feature will show a live demo of how QR scanning works. Coming soon!",
+                  });
+                }}
               >
                 Preview A Live Ping
               </Button>

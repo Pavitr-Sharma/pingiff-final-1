@@ -103,6 +103,28 @@ const Dashboard = () => {
           <Link to="/">
             <img src={logo} alt="PingME" className="h-10" />
           </Link>
+          
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center gap-6">
+            <Link to="/" className="text-muted-foreground font-medium hover:text-foreground transition-colors">
+              Home
+            </Link>
+            <Link to="/products" className="text-muted-foreground font-medium hover:text-foreground transition-colors">
+              Products
+            </Link>
+            <Link to="/about" className="text-muted-foreground font-medium hover:text-foreground transition-colors">
+              About Us
+            </Link>
+            <Link to="/contact" className="text-muted-foreground font-medium hover:text-foreground transition-colors">
+              Contact Us
+            </Link>
+            <Link
+              to="/dashboard"
+              className="px-5 py-2.5 rounded-full border-2 border-foreground text-foreground font-semibold text-sm transition-all hover:bg-foreground hover:text-background"
+            >
+              Dashboard
+            </Link>
+          </nav>
           <div className="flex items-center gap-2">
             {/* Notifications Sheet */}
             <Sheet open={showNotifications} onOpenChange={setShowNotifications}>
