@@ -107,7 +107,9 @@ const ScanView = () => {
     return (
       <div className="min-h-screen bg-ping-cream flex flex-col">
         <header className="bg-ping-yellow py-3 px-4 flex items-center justify-center shadow-md">
-          <img src={logo} alt="PingME" className="h-9" />
+          <Link to="/">
+            <img src={logo} alt="PingME" className="h-9 cursor-pointer" />
+          </Link>
         </header>
         <div className="flex-1 flex items-center justify-center px-4">
           <div className="text-center">
