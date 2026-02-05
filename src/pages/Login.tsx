@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRedirectToLandingOnBack } from "@/hooks/useRedirectToLandingOnBack";
 import logo from "@/assets/ping-me-logo.png";
 import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 

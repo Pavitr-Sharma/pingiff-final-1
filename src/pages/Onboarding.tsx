@@ -9,7 +9,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/ping-me-logo.png";
 import { User, Car, ArrowRight, Check, ArrowLeft, Loader2 } from "lucide-react";
 import { addVehicle } from "@/hooks/useFirestore";
-import { useRedirectToLandingOnBack } from "@/hooks/useRedirectToLandingOnBack";
 
 const Onboarding = () => {
   const [step, setStep] = useState(1);
@@ -24,8 +23,6 @@ const Onboarding = () => {
   const { toast } = useToast();
   const { user, userProfile, updateUserProfile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-
-  useRedirectToLandingOnBack();
 
   // Pre-fill name if available from Google
   useEffect(() => {
@@ -43,12 +40,26 @@ const Onboarding = () => {
     }
   }, [userProfile, authLoading, navigate]);
 
-  // Redirect if not authenticated
+  // Handle browser back button - redirect to landing
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/login", { replace: true });
-    }
-  }, [user, authLoading, navigate]);
+    const handlePopState = () => {
+      // When user presses browser back, go to landing page
+      window.location.href = "/?from=back";
+    };
+
+    // Push a state so we can intercept the back button
+    window.history.pushState({ onboarding: true }, "", window.location.href);
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
+  const handleGoBack = () => {
+    // Use window.location for a full navigation to ensure clean state
+    window.location.href = "/?from=back";
+  };
 
   const handleProfileSubmit = () => {
     if (!fullName.trim()) {
@@ -140,6 +151,15 @@ const Onboarding = () => {
     );
   }
 
+  // If not authenticated, show loading briefly then the page will handle redirect via ProtectedRoute
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-secondary flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-secondary flex flex-col">
       {/* Header */}
@@ -219,7 +239,7 @@ const Onboarding = () => {
                   <Button 
                     variant="ghost" 
                     className="w-full" 
-                    onClick={() => navigate("/?from=back", { replace: true })}
+                    onClick={handleGoBack}
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Go Back
