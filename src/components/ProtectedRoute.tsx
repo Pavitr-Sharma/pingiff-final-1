@@ -6,7 +6,7 @@ interface ProtectedRouteProps {
   requireOnboarding?: boolean;
 }
 
-const ProtectedRoute = ({ children, requireOnboarding = true }: ProtectedRouteProps) => {
+const ProtectedRoute = ({ children, requireOnboarding = false }: ProtectedRouteProps) => {
   const { user, userProfile, loading } = useAuth();
   const location = useLocation();
 

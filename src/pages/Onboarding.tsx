@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/ping-me-logo.png";
 import { User, Car, ArrowRight, Check, ArrowLeft, Loader2 } from "lucide-react";
 import { addVehicle } from "@/hooks/useFirestore";
+import { useRedirectToLandingOnBack } from "@/hooks/useRedirectToLandingOnBack";
 
 const Onboarding = () => {
   const [step, setStep] = useState(1);
@@ -23,6 +24,8 @@ const Onboarding = () => {
   const { toast } = useToast();
   const { user, userProfile, updateUserProfile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  useRedirectToLandingOnBack();
 
   // Pre-fill name if available from Google
   useEffect(() => {
@@ -216,7 +219,7 @@ const Onboarding = () => {
                   <Button 
                     variant="ghost" 
                     className="w-full" 
-                    onClick={() => navigate("/")}
+                    onClick={() => navigate("/?from=back", { replace: true })}
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Go Back
