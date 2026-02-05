@@ -41,8 +41,6 @@ const Register = () => {
   const navigate = useNavigate();
   const { signInWithGoogle, signUpWithEmail, user, userProfile, loading: authLoading } = useAuth();
 
-  useRedirectToLandingOnBack();
-
   // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && user && userProfile !== undefined) {

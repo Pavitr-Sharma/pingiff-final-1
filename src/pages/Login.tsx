@@ -23,8 +23,6 @@ const Login = () => {
   const location = useLocation();
   const { signInWithGoogle, signInWithEmail, resetPassword, user, userProfile, loading: authLoading } = useAuth();
 
-  useRedirectToLandingOnBack();
-
   // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && user && userProfile !== undefined) {
