@@ -8,7 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRedirectToLandingOnBack } from "@/hooks/useRedirectToLandingOnBack";
 import logo from "@/assets/ping-me-logo.png";
 import { Loader2, User, Mail, Lock, Eye, EyeOff, Phone, MapPin } from "lucide-react";
 
@@ -41,8 +40,6 @@ const Register = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { signInWithGoogle, signUpWithEmail, user, userProfile, loading: authLoading } = useAuth();
-
-  useRedirectToLandingOnBack();
 
   // Redirect if already logged in
   useEffect(() => {
