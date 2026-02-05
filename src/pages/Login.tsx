@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRedirectToLandingOnBack } from "@/hooks/useRedirectToLandingOnBack";
 import logo from "@/assets/ping-me-logo.png";
 import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
@@ -23,16 +24,15 @@ const Login = () => {
   const location = useLocation();
   const { signInWithGoogle, signInWithEmail, resetPassword, user, userProfile, loading: authLoading } = useAuth();
 
+  useRedirectToLandingOnBack();
+
   // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && user && userProfile !== undefined) {
       const from = (location.state as any)?.from?.pathname || "/dashboard";
 
-      if (userProfile?.isOnboarded) {
-        navigate(from, { replace: true });
-      } else if (userProfile && !userProfile.isOnboarded) {
-        navigate("/onboarding", { replace: true });
-      }
+      // Onboarding is no longer compulsory
+      navigate(from, { replace: true });
     }
   }, [user, userProfile, authLoading, navigate, location]);
 

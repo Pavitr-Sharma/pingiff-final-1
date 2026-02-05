@@ -1,10 +1,13 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import MainLayout from "@/layouts/MainLayout";
 import LandingHero from "@/components/landing/LandingHero";
 
 const Landing = () => {
   const { user, loading } = useAuth();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const allowAuthed = params.get("from") === "back";
 
   if (loading) {
     return (
@@ -17,7 +20,7 @@ const Landing = () => {
   }
 
   // If authenticated, redirect to home
-  if (user) {
+  if (user && !allowAuthed) {
     return <Navigate to="/home" replace />;
   }
 
