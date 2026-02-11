@@ -8,6 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { createPrebooking } from "@/lib/prebookService";
 import { Loader2, CheckCircle, ShoppingBag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import productCard from "@/assets/product-card.png";
 
 const productMap: Record<string, { title: string; price: string; emoji?: string }> = {
   "pingme-car-card": { title: "PingMe Car Card", price: "₹499" },
