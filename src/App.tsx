@@ -15,6 +15,7 @@ import Dashboard from "./pages/Dashboard";
 import ScanView from "./pages/ScanView";
 import Onboarding from "./pages/Onboarding";
 import Products from "./pages/Products";
+import Prebook from "./pages/Prebook";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/scan/:qrUuid" element={<ScanView />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/prebook" element={<Prebook />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             

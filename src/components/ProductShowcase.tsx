@@ -67,7 +67,7 @@ const ProductShowcase = () => {
             </ul>
 
             <Button size="xl" className="w-full sm:w-auto" asChild>
-              <Link to="/register">Order Now — ₹199</Link>
+              <Link to="/prebook?product=standard-car-card">Order Now — ₹199</Link>
             </Button>
           </div>
         </div>
