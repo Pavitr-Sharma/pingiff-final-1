@@ -134,7 +134,7 @@ const Prebook = () => {
         <div className="flex items-center gap-4 mb-6 p-4 rounded-xl border bg-card">
           <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center overflow-hidden">
             {product.image ? (
-              <img src={product.image} alt={product.title} className="w-12 h-12 object-cover" />
+              <img src={product.image} alt={product.title} className="w-6 h-6 object-cover" />
             ) : product.emoji ? (
               <span className="text-3xl">{product.emoji}</span>
             ) : (
