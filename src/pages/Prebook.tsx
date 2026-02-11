@@ -58,8 +58,8 @@ const Prebook = () => {
   const { toast } = useToast();
   const { user, userProfile } = useAuth();
 
-  const productSlug = searchParams.get("product") || "standard-car-card";
-  const product = productMap[productSlug] || productMap["standard-car-card"];
+  const productSlug = searchParams.get("product") || "pingme-car-card";
+  const product = productMap[productSlug] || productMap["pingme-car-card"];
 
   const [fullName, setFullName] = useState(userProfile?.fullName || "");
   const [email, setEmail] = useState(userProfile?.email || "");
