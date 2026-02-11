@@ -11,7 +11,7 @@ import { Loader2, CheckCircle, ShoppingBag } from "lucide-react";
 import productCard from "@/assets/product-card.png";
 
 const productMap: Record<string, { title: string; price: string; emoji?: string; image?: string }> = {
-  "pingme-car-card": { title: "PingMe Car Card", price: "₹499", image: productCard },
+  "pingme-car-card": { title: "PingMe Car Card (2 Units)", price: "₹499", image: productCard },
   "bike-tag": { title: "Bike Tag", price: "₹249", emoji: "🏍️" },
   "laptop-tag": { title: "Laptop Tag", price: "₹199", emoji: "💻" },
   "keychain-tag": { title: "Keychain Tag", price: "₹179", emoji: "🔑" },
