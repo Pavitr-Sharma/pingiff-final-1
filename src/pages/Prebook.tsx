@@ -17,6 +17,8 @@ const productMap: Record<string, { title: string; price: string; emoji?: string 
 };
 
 const indianStates = [
+  "Chandigarh",
+  "New Delhi",
   "Andhra Pradesh",
   "Arunachal Pradesh",
   "Assam",
@@ -48,8 +50,6 @@ const indianStates = [
   "Delhi",
   "Jammu & Kashmir",
   "Ladakh",
-  "Chandigarh",
-  "New Delhi",
 ];
 
 const Prebook = () => {
