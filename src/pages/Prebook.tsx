@@ -17,11 +17,39 @@ const productMap: Record<string, { title: string; price: string; emoji?: string 
 };
 
 const indianStates = [
-  "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat",
-  "Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh",
-  "Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab",
-  "Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh",
-  "Uttarakhand","West Bengal","Delhi","Jammu & Kashmir","Ladakh",
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  "Delhi",
+  "Jammu & Kashmir",
+  "Ladakh",
+  "Chandigarh",
+  "New Delhi",
 ];
 
 const Prebook = () => {
@@ -86,10 +114,14 @@ const Prebook = () => {
           <p className="text-muted-foreground mb-2">
             Your <strong>{product.title}</strong> (x{quantity}) has been pre-booked.
           </p>
-          <p className="text-muted-foreground mb-6">We'll reach out to you shortly with payment and delivery details.</p>
+          <p className="text-muted-foreground mb-6">
+            We'll reach out to you shortly with payment and delivery details.
+          </p>
           <div className="flex gap-3 justify-center">
             <Button onClick={() => navigate("/products")}>Browse More</Button>
-            <Button variant="outline" onClick={() => navigate("/")}>Go Home</Button>
+            <Button variant="outline" onClick={() => navigate("/")}>
+              Go Home
+            </Button>
           </div>
         </div>
       </MainLayout>
@@ -112,9 +144,19 @@ const Prebook = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 border rounded-xl">
-            <button className="px-3 py-1 hover:bg-muted rounded-l-xl" onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
+            <button
+              className="px-3 py-1 hover:bg-muted rounded-l-xl"
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            >
+              −
+            </button>
             <span className="px-2 font-medium">{quantity}</span>
-            <button className="px-3 py-1 hover:bg-muted rounded-r-xl" onClick={() => setQuantity(Math.min(10, quantity + 1))}>+</button>
+            <button
+              className="px-3 py-1 hover:bg-muted rounded-r-xl"
+              onClick={() => setQuantity(Math.min(10, quantity + 1))}
+            >
+              +
+            </button>
           </div>
         </div>
 
@@ -123,28 +165,65 @@ const Prebook = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="fullName">Full Name *</Label>
-            <Input id="fullName" placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1" />
+            <Input
+              id="fullName"
+              placeholder="John Doe"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="mt-1"
+            />
           </div>
           <div>
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1" />
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1"
+            />
           </div>
           <div>
             <Label htmlFor="phone">Phone Number *</Label>
-            <Input id="phone" placeholder="+91 9876543210" value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-1" />
+            <Input
+              id="phone"
+              placeholder="+91 9876543210"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="mt-1"
+            />
           </div>
           <div>
             <Label htmlFor="address">Delivery Address *</Label>
-            <Input id="address" placeholder="House no, Street, Locality" value={address} onChange={(e) => setAddress(e.target.value)} className="mt-1" />
+            <Input
+              id="address"
+              placeholder="House no, Street, Locality"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="mt-1"
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="city">City *</Label>
-              <Input id="city" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} className="mt-1" />
+              <Input
+                id="city"
+                placeholder="City"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className="mt-1"
+              />
             </div>
             <div>
               <Label htmlFor="pincode">Pincode *</Label>
-              <Input id="pincode" placeholder="110001" value={pincode} onChange={(e) => setPincode(e.target.value)} className="mt-1" />
+              <Input
+                id="pincode"
+                placeholder="110001"
+                value={pincode}
+                onChange={(e) => setPincode(e.target.value)}
+                className="mt-1"
+              />
             </div>
           </div>
           <div>
@@ -157,7 +236,9 @@ const Prebook = () => {
             >
               <option value="">Select State</option>
               {indianStates.map((s) => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s}>
+                  {s}
+                </option>
               ))}
             </select>
           </div>
