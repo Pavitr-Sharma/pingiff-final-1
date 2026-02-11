@@ -10,10 +10,10 @@ import { createPrebooking } from "@/lib/prebookService";
 import { Loader2, CheckCircle, ShoppingBag } from "lucide-react";
 
 const productMap: Record<string, { title: string; price: string; emoji?: string }> = {
-  "pingme-car-card": { title: "PingMe Car Card", price: "₹199" },
-  "bike-tag": { title: "Bike Tag", price: "₹149", emoji: "🏍️" },
-  "laptop-tag": { title: "Laptop Tag", price: "₹99", emoji: "💻" },
-  "keychain-tag": { title: "Keychain Tag", price: "₹79", emoji: "🔑" },
+  "pingme-car-card": { title: "PingMe Car Card", price: "₹499" },
+  "bike-tag": { title: "Bike Tag", price: "₹249", emoji: "🏍️" },
+  "laptop-tag": { title: "Laptop Tag", price: "₹199", emoji: "💻" },
+  "keychain-tag": { title: "Keychain Tag", price: "₹179", emoji: "🔑" },
 };
 
 const indianStates = [
