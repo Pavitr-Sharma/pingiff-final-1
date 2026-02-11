@@ -167,7 +167,7 @@ const Prebook = () => {
             <Label htmlFor="fullName">Full Name *</Label>
             <Input
               id="fullName"
-              placeholder="John Doe"
+              placeholder="Arpit Pathak"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="mt-1"
@@ -198,7 +198,7 @@ const Prebook = () => {
             <Label htmlFor="address">Delivery Address *</Label>
             <Input
               id="address"
-              placeholder="House no, Street, Locality"
+              placeholder="House number, Street, Locality"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               className="mt-1"
@@ -219,7 +219,7 @@ const Prebook = () => {
               <Label htmlFor="pincode">Pincode *</Label>
               <Input
                 id="pincode"
-                placeholder="110001"
+                placeholder="160012"
                 value={pincode}
                 onChange={(e) => setPincode(e.target.value)}
                 className="mt-1"
