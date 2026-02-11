@@ -345,14 +345,11 @@ const Dashboard = () => {
                   <p className="text-xs text-muted-foreground line-through">₹299</p>
                 </div>
               </div>
-              <Button
-                size="full"
-                onClick={() =>
-                  toast({ title: "Coming Soon", description: "Payment integration will be available soon!" })
-                }
-              >
-                <ShoppingCart className="w-4 h-4" />
-                Order Now
+              <Button size="full" asChild>
+                <Link to="/prebook?product=standard-car-card">
+                  <ShoppingCart className="w-4 h-4" />
+                  Order Now
+                </Link>
               </Button>
             </div>
           </motion.div>
@@ -402,17 +399,17 @@ const Dashboard = () => {
 };
 
 const CustomProductCard = ({ emoji, title, price }: { emoji: string; title: string; price: string }) => {
-  const { toast } = useToast();
+  const slug = title.toLowerCase().replace(/\s+/g, "-");
 
   return (
-    <div
-      onClick={() => toast({ title: "Coming Soon", description: "Custom products will be available soon!" })}
-      className="bg-card p-4 rounded-xl border border-border text-center hover:border-primary/50 transition-colors cursor-pointer"
+    <Link
+      to={`/prebook?product=${slug}`}
+      className="bg-card p-4 rounded-xl border border-border text-center hover:border-primary/50 transition-colors cursor-pointer block"
     >
       <span className="text-2xl">{emoji}</span>
       <h4 className="font-medium text-sm mt-2">{title}</h4>
       <p className="text-primary font-bold text-sm">{price}</p>
-    </div>
+    </Link>
   );
 };
 

@@ -86,7 +86,7 @@ const Products = () => {
                   ))}
                 </ul>
 
-                <Link to="/register">
+                <Link to={`/prebook?product=${product.title.toLowerCase().replace(/\s+/g, "-")}`}>
                   <Button className="w-full" variant={product.popular ? "default" : "outline"}>
                     Order Now
                   </Button>
