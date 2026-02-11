@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import productCard from "@/assets/product-card.png";
 
 const productMap: Record<string, { title: string; price: string; emoji?: string }> = {
-  "pingme-car-card": { title: "PingMe Car Card", price: "₹499" },
+  "pingme-car-card": { title: "PingMe Car Card", price: "₹499", image: productCard },
   "bike-tag": { title: "Bike Tag", price: "₹249", emoji: "🏍️" },
   "laptop-tag": { title: "Laptop Tag", price: "₹199", emoji: "💻" },
   "keychain-tag": { title: "Keychain Tag", price: "₹179", emoji: "🔑" },
