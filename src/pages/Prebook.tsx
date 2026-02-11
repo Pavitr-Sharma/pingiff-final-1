@@ -8,50 +8,22 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { createPrebooking } from "@/lib/prebookService";
 import { Loader2, CheckCircle, ShoppingBag } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import productCard from "@/assets/product-card.png";
 
-const productMap: Record<string, { title: string; price: string; emoji?: string }> = {
-  "pingme-car-card": { title: "PingMe Car Card", price: "₹499", image: productCard, icon: <Car className="w-7 h-7 text-primary" /> // Fallback clear icon },
+const productMap: Record<string, { title: string; price: string; emoji?: string; image?: string }> = {
+  "pingme-car-card": { title: "PingMe Car Card", price: "₹499", image: productCard },
   "bike-tag": { title: "Bike Tag", price: "₹249", emoji: "🏍️" },
   "laptop-tag": { title: "Laptop Tag", price: "₹199", emoji: "💻" },
   "keychain-tag": { title: "Keychain Tag", price: "₹179", emoji: "🔑" },
 };
 
 const indianStates = [
-  "Chandigarh",
-  "New Delhi",
-  "Andhra Pradesh",
-  "Arunachal Pradesh",
-  "Assam",
-  "Bihar",
-  "Chhattisgarh",
-  "Goa",
-  "Gujarat",
-  "Haryana",
-  "Himachal Pradesh",
-  "Jharkhand",
-  "Karnataka",
-  "Kerala",
-  "Madhya Pradesh",
-  "Maharashtra",
-  "Manipur",
-  "Meghalaya",
-  "Mizoram",
-  "Nagaland",
-  "Odisha",
-  "Punjab",
-  "Rajasthan",
-  "Sikkim",
-  "Tamil Nadu",
-  "Telangana",
-  "Tripura",
-  "Uttar Pradesh",
-  "Uttarakhand",
-  "West Bengal",
-  "Delhi",
-  "Jammu & Kashmir",
-  "Ladakh",
+  "Chandigarh", "New Delhi", "Andhra Pradesh", "Arunachal Pradesh", "Assam",
+  "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh",
+  "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra",
+  "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
+  "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
+  "Uttar Pradesh", "Uttarakhand", "West Bengal", "Delhi", "Jammu & Kashmir", "Ladakh",
 ];
 
 const Prebook = () => {
@@ -76,12 +48,10 @@ const Prebook = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!fullName.trim() || !phone.trim() || !address.trim() || !city.trim() || !state || !pincode.trim()) {
       toast({ title: "Missing Fields", description: "Please fill all required fields.", variant: "destructive" });
       return;
     }
-
     setSubmitting(true);
     try {
       await createPrebooking({
@@ -111,7 +81,7 @@ const Prebook = () => {
     return (
       <MainLayout>
         <div className="container py-20 text-center max-w-md mx-auto">
-          <CheckCircle className="w-16 h-16 text-success mx-auto mb-4" />
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">Pre-booking Confirmed!</h1>
           <p className="text-muted-foreground mb-2">
             Your <strong>{product.title}</strong> (x{quantity}) has been pre-booked.
@@ -121,9 +91,7 @@ const Prebook = () => {
           </p>
           <div className="flex gap-3 justify-center">
             <Button onClick={() => navigate("/products")}>Browse More</Button>
-            <Button variant="outline" onClick={() => navigate("/")}>
-              Go Home
-            </Button>
+            <Button variant="outline" onClick={() => navigate("/")}>Go Home</Button>
           </div>
         </div>
       </MainLayout>
@@ -134,20 +102,16 @@ const Prebook = () => {
     <MainLayout>
       <div className="container py-12 max-w-lg mx-auto">
         {/* Product Summary */}
-        <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center overflow-hidden">
-    {product.image ? (
-      <img 
-        src={product.image} 
-        alt={product.title} 
-        className="w-full h-full object-cover" 
-        onError={(e) => (e.currentTarget.style.display = 'none')} // Hide if image fails
-      />
-    ) : product.emoji ? (
-      <span className="text-3xl">{product.emoji}</span>
-    ) : (
-      product.icon || <ShoppingBag className="w-7 h-7 text-primary" />
-    )}
-  </div>
+        <div className="flex items-center gap-4 mb-6 p-4 rounded-xl border bg-card">
+          <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center overflow-hidden">
+            {product.image ? (
+              <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
+            ) : product.emoji ? (
+              <span className="text-3xl">{product.emoji}</span>
+            ) : (
+              <ShoppingBag className="w-7 h-7 text-primary" />
+            )}
+          </div>
           <div className="flex-1">
             <h2 className="font-bold text-lg">{product.title}</h2>
             <div className="flex items-baseline gap-2">
@@ -156,19 +120,9 @@ const Prebook = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 border rounded-xl">
-            <button
-              className="px-3 py-1 hover:bg-muted rounded-l-xl"
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            >
-              −
-            </button>
+            <button className="px-3 py-1 hover:bg-muted rounded-l-xl" onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
             <span className="px-2 font-medium">{quantity}</span>
-            <button
-              className="px-3 py-1 hover:bg-muted rounded-r-xl"
-              onClick={() => setQuantity(Math.min(10, quantity + 1))}
-            >
-              +
-            </button>
+            <button className="px-3 py-1 hover:bg-muted rounded-r-xl" onClick={() => setQuantity(Math.min(10, quantity + 1))}>+</button>
           </div>
         </div>
 
@@ -177,85 +131,38 @@ const Prebook = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="fullName">Full Name *</Label>
-            <Input
-              id="fullName"
-              placeholder="Arpit Pathak"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="mt-1"
-            />
+            <Input id="fullName" placeholder="Arpit Pathak" value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1" />
           </div>
           <div>
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1"
-            />
+            <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1" />
           </div>
           <div>
             <Label htmlFor="phone">Phone Number *</Label>
-            <Input
-              id="phone"
-              placeholder="+91 9876543210"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="mt-1"
-            />
+            <Input id="phone" placeholder="+91 9876543210" value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-1" />
           </div>
           <div>
             <Label htmlFor="address">Delivery Address *</Label>
-            <Input
-              id="address"
-              placeholder="House number, Street, Locality"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="mt-1"
-            />
+            <Input id="address" placeholder="House number, Street, Locality" value={address} onChange={(e) => setAddress(e.target.value)} className="mt-1" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="city">City *</Label>
-              <Input
-                id="city"
-                placeholder="City"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                className="mt-1"
-              />
+              <Input id="city" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} className="mt-1" />
             </div>
             <div>
               <Label htmlFor="pincode">Pincode *</Label>
-              <Input
-                id="pincode"
-                placeholder="160012"
-                value={pincode}
-                onChange={(e) => setPincode(e.target.value)}
-                className="mt-1"
-              />
+              <Input id="pincode" placeholder="160012" value={pincode} onChange={(e) => setPincode(e.target.value)} className="mt-1" />
             </div>
           </div>
           <div>
             <Label htmlFor="state">State *</Label>
-            <select
-              id="state"
-              value={state}
-              onChange={(e) => setState(e.target.value)}
-              className="mt-1 w-full h-11 rounded-xl border border-border bg-background px-3 text-sm"
-            >
+            <select id="state" value={state} onChange={(e) => setState(e.target.value)} className="mt-1 w-full h-11 rounded-xl border border-border bg-background px-3 text-sm">
               <option value="">Select State</option>
-              {indianStates.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
+              {indianStates.map((s) => (<option key={s} value={s}>{s}</option>))}
             </select>
           </div>
-
-          <Button type="submit" size="full" disabled={submitting} className="mt-6">
+          <Button type="submit" className="w-full mt-6" disabled={submitting}>
             {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Confirm Pre-booking"}
           </Button>
         </form>
