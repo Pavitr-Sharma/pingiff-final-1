@@ -18,12 +18,39 @@ const productMap: Record<string, { title: string; price: string; emoji?: string;
 };
 
 const indianStates = [
-  "Chandigarh", "New Delhi", "Andhra Pradesh", "Arunachal Pradesh", "Assam",
-  "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh",
-  "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra",
-  "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
-  "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
-  "Uttar Pradesh", "Uttarakhand", "West Bengal", "Delhi", "Jammu & Kashmir", "Ladakh",
+  "Chandigarh",
+  "New Delhi",
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  "Delhi",
+  "Jammu & Kashmir",
+  "Ladakh",
 ];
 
 const Prebook = () => {
@@ -91,7 +118,9 @@ const Prebook = () => {
           </p>
           <div className="flex gap-3 justify-center">
             <Button onClick={() => navigate("/products")}>Browse More</Button>
-            <Button variant="outline" onClick={() => navigate("/")}>Go Home</Button>
+            <Button variant="outline" onClick={() => navigate("/")}>
+              Go Home
+            </Button>
           </div>
         </div>
       </MainLayout>
@@ -105,7 +134,7 @@ const Prebook = () => {
         <div className="flex items-center gap-4 mb-6 p-4 rounded-xl border bg-card">
           <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center overflow-hidden">
             {product.image ? (
-              <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
+              <img src={product.image} alt={product.title} className="w-12 h-12 object-cover" />
             ) : product.emoji ? (
               <span className="text-3xl">{product.emoji}</span>
             ) : (
@@ -120,9 +149,19 @@ const Prebook = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 border rounded-xl">
-            <button className="px-3 py-1 hover:bg-muted rounded-l-xl" onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
+            <button
+              className="px-3 py-1 hover:bg-muted rounded-l-xl"
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            >
+              −
+            </button>
             <span className="px-2 font-medium">{quantity}</span>
-            <button className="px-3 py-1 hover:bg-muted rounded-r-xl" onClick={() => setQuantity(Math.min(10, quantity + 1))}>+</button>
+            <button
+              className="px-3 py-1 hover:bg-muted rounded-r-xl"
+              onClick={() => setQuantity(Math.min(10, quantity + 1))}
+            >
+              +
+            </button>
           </div>
         </div>
 
@@ -131,35 +170,81 @@ const Prebook = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="fullName">Full Name *</Label>
-            <Input id="fullName" placeholder="Arpit Pathak" value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1" />
+            <Input
+              id="fullName"
+              placeholder="Arpit Pathak"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="mt-1"
+            />
           </div>
           <div>
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1" />
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1"
+            />
           </div>
           <div>
             <Label htmlFor="phone">Phone Number *</Label>
-            <Input id="phone" placeholder="+91 9876543210" value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-1" />
+            <Input
+              id="phone"
+              placeholder="+91 9876543210"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="mt-1"
+            />
           </div>
           <div>
             <Label htmlFor="address">Delivery Address *</Label>
-            <Input id="address" placeholder="House number, Street, Locality" value={address} onChange={(e) => setAddress(e.target.value)} className="mt-1" />
+            <Input
+              id="address"
+              placeholder="House number, Street, Locality"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="mt-1"
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="city">City *</Label>
-              <Input id="city" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} className="mt-1" />
+              <Input
+                id="city"
+                placeholder="City"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className="mt-1"
+              />
             </div>
             <div>
               <Label htmlFor="pincode">Pincode *</Label>
-              <Input id="pincode" placeholder="160012" value={pincode} onChange={(e) => setPincode(e.target.value)} className="mt-1" />
+              <Input
+                id="pincode"
+                placeholder="160012"
+                value={pincode}
+                onChange={(e) => setPincode(e.target.value)}
+                className="mt-1"
+              />
             </div>
           </div>
           <div>
             <Label htmlFor="state">State *</Label>
-            <select id="state" value={state} onChange={(e) => setState(e.target.value)} className="mt-1 w-full h-11 rounded-xl border border-border bg-background px-3 text-sm">
+            <select
+              id="state"
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+              className="mt-1 w-full h-11 rounded-xl border border-border bg-background px-3 text-sm"
+            >
               <option value="">Select State</option>
-              {indianStates.map((s) => (<option key={s} value={s}>{s}</option>))}
+              {indianStates.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
             </select>
           </div>
           <Button type="submit" className="w-full mt-6" disabled={submitting}>
