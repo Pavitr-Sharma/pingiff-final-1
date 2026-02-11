@@ -342,7 +342,7 @@ const Dashboard = () => {
                 </div>
                 <div className="text-right">
                   <span className="text-2xl font-bold">₹499</span>
-                  <p className="text-xs text-muted-foreground line-through">₹299</p>
+                  <p className="text-xs text-muted-foreground line-through">₹599</p>
                 </div>
               </div>
               <Button size="full" asChild>
