@@ -341,7 +341,7 @@ const Dashboard = () => {
                   <p className="text-muted-foreground text-sm">With QR code for your vehicle</p>
                 </div>
                 <div className="text-right">
-                  <span className="text-2xl font-bold">₹199</span>
+                  <span className="text-2xl font-bold">₹499</span>
                   <p className="text-xs text-muted-foreground line-through">₹299</p>
                 </div>
               </div>
@@ -359,9 +359,9 @@ const Dashboard = () => {
         <div className="mb-8">
           <h2 className="text-lg font-bold mb-4">Custom QR Products</h2>
           <div className="grid grid-cols-3 gap-4">
-            <CustomProductCard emoji="💻" title="Laptop Tag" price="₹99" />
-            <CustomProductCard emoji="🔑" title="Keychain" price="₹79" />
-            <CustomProductCard emoji="👜" title="Bag Tag" price="₹89" />
+            <CustomProductCard emoji="💻" title="Laptop Tag" price="₹199" />
+            <CustomProductCard emoji="🔑" title="Keychain" price="₹179" />
+            <CustomProductCard emoji="👜" title="Bag Tag" price="₹189" />
           </div>
         </div>
 
