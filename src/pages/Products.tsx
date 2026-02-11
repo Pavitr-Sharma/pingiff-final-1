@@ -7,8 +7,8 @@ import productCard from "@/assets/product-card.png";
 const products = [
   {
     title: "Standard Car Card",
-    price: "₹199",
-    originalPrice: "₹299",
+    price: "₹499",
+    originalPrice: "₹599",
     image: productCard,
     features: [
       "Premium quality card with QR code",
@@ -20,22 +20,22 @@ const products = [
   },
   {
     title: "Bike Tag",
-    price: "₹149",
-    originalPrice: "₹199",
+    price: "₹249",
+    originalPrice: "₹299",
     emoji: "🏍️",
     features: ["Compact design for bikes", "UV resistant material", "Easy installation", "Lifetime QR code activation"],
   },
   {
     title: "Laptop Tag",
-    price: "₹99",
-    originalPrice: "₹149",
+    price: "₹199",
+    originalPrice: "₹249",
     emoji: "💻",
     features: ["Sleek sticker design", "Perfect for laptops & tablets", "Easy to apply", "Lifetime QR code activation"],
   },
   {
     title: "Keychain Tag",
-    price: "₹79",
-    originalPrice: "₹99",
+    price: "₹179",
+    originalPrice: "₹199",
     emoji: "🔑",
     features: ["Durable metal keychain", "QR code engraved", "Water resistant", "Lifetime activation"],
   },
