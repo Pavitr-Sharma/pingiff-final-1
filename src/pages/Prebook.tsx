@@ -134,10 +134,20 @@ const Prebook = () => {
     <MainLayout>
       <div className="container py-12 max-w-lg mx-auto">
         {/* Product Summary */}
-        <div className="bg-card border border-border rounded-2xl p-6 mb-8 flex items-center gap-4">
-          <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center text-3xl">
-            {product.emoji || <ShoppingBag className="w-7 h-7 text-primary" />}
-          </div>
+        <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center overflow-hidden">
+    {product.image ? (
+      <img 
+        src={product.image} 
+        alt={product.title} 
+        className="w-full h-full object-cover" 
+        onError={(e) => (e.currentTarget.style.display = 'none')} // Hide if image fails
+      />
+    ) : product.emoji ? (
+      <span className="text-3xl">{product.emoji}</span>
+    ) : (
+      product.icon || <ShoppingBag className="w-7 h-7 text-primary" />
+    )}
+  </div>
           <div className="flex-1">
             <h2 className="font-bold text-lg">{product.title}</h2>
             <div className="flex items-baseline gap-2">
